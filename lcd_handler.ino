@@ -62,29 +62,32 @@ PROGMEM const char *httpStrings[] =
 prog_char httpResponseString01[] PROGMEM = "HTTP/1.1 200 OK"; 
 prog_char httpResponseString02[] PROGMEM = "Content-Type: text/html";
 prog_char httpResponseString03[] PROGMEM = "Connection: close";
-prog_char httpResponseString04[] PROGMEM = "<!DOCTYPE HTML>";
-prog_char httpResponseString05[] PROGMEM = "<html>";
-prog_char httpResponseString06[] PROGMEM = "<title>Config Utility</title>";
-prog_char httpResponseString07[] PROGMEM = "<h3>Config Utility</h3>";
-prog_char httpResponseString08[] PROGMEM = "<p>Change display settings</p>";
-prog_char httpResponseString09[] PROGMEM = "<form name=\"form1\">";
-prog_char httpResponseString10[] PROGMEM = "<input type=\"text\" name=\"input1\"/>";
-prog_char httpResponseString11[] PROGMEM = "</form>";
-prog_char httpResponseString12[] PROGMEM = "</html>";
+prog_char httpResponseString04[] PROGMEM = "<html><h3 style=\"font-family:arial\">Settings Saved</h3></html>";
+prog_char httpResponseString05[] PROGMEM = "<!DOCTYPE HTML>";
+prog_char httpResponseString06[] PROGMEM = "<html>";
+prog_char httpResponseString07[] PROGMEM = "<title>Config Utility</title>";
+prog_char httpResponseString08[] PROGMEM = "<body style=\"font-family:arial\">";
+prog_char httpResponseString09[] PROGMEM = "<h3>Config Utility</h3><p></p>";
+prog_char httpResponseString10[] PROGMEM = "<hr align=\"left\" width=\"300\"><p></p>";
+prog_char httpResponseString11[] PROGMEM = "<form name=\"form1\" action=\"\" method=\"post\">";
+prog_char httpResponseString12[] PROGMEM = "<label for=\"bltimer\">Backlight timer (seconds)</label>";
+prog_char httpResponseString13[] PROGMEM = "<input type=\"text\" name=\"blttimer\" id=\"bltimer\" maxlength=\"3\" size=\"8\"/><p></p>";
+prog_char httpResponseString14[] PROGMEM = "<label for=\"data\">Some other data</label>";
+prog_char httpResponseString15[] PROGMEM = "<input type=\"text\" name=\"data\" id=\"data\" maxlength=\"10\" size=\"10\"/><p></p>";
+prog_char httpResponseString16[] PROGMEM = "<hr align=\"left\" width=\"300\"><p></p>";
+prog_char httpResponseString17[] PROGMEM = "<input type=\"submit\" value=\"Save\"/>";
+prog_char httpResponseString18[] PROGMEM = "</form>";
+prog_char httpResponseString19[] PROGMEM = "</body>";
+prog_char httpResponseString20[] PROGMEM = "</html>";
 PROGMEM const char *httpResponseStrings[] =
 {   
-  httpResponseString01,
-  httpResponseString02,
-  httpResponseString03,
-  httpResponseString04,
-  httpResponseString05,
-  httpResponseString06,
-  httpResponseString07,
-  httpResponseString08,
-  httpResponseString09,
-  httpResponseString10,
-  httpResponseString11,
-  httpResponseString12
+  httpResponseString01,httpResponseString02,httpResponseString03,
+  httpResponseString04,httpResponseString05,httpResponseString06,
+  httpResponseString07,httpResponseString08,httpResponseString09,
+  httpResponseString10,httpResponseString11,httpResponseString12,
+  httpResponseString13,httpResponseString14,httpResponseString15,
+  httpResponseString16,httpResponseString17,httpResponseString18,
+  httpResponseString19,httpResponseString20
 };
 
 byte numberOfMessages = 0;
@@ -437,6 +440,11 @@ void printText(char *message) {
   }
 }
 
+/*
+ * See if there is any data available to read
+ * from serial (USB) in. If there is, read it
+ * and process it accordingly.
+ */
 void checkForSerialData() {
   while (Serial.available()) {
     messages[numberOfMessages][serialRXCursor] = Serial.read();
@@ -455,69 +463,111 @@ void checkForSerialData() {
   }
 }
 
+/*
+ * Take a URL-encoded post form string and
+ * save each of the individual properties to
+ * EEPROM.
+ */
+void saveNewSettings(char * httpFormData) {
+  Serial.println("Saving settings:");
+  Serial.println(httpFormData);
+  Serial.println("Saved");
+  lcd.clear();
+  lcd.setCursor(0, 0);
+  lcd.print("Settings Saved");
+}
+
+/*
+ * Take an ethernet client and consume chars from
+ * it until we have reached the end of the HTTP headers
+ */
+void skipHTTPHeaders(EthernetClient serverClient) {
+  
+  char previousChar = '\0';
+  char currentChar = '\0';
+  
+  while (serverClient.connected() && serverClient.available()) {
+    currentChar = serverClient.read();
+    //Serial.write(currentChar);
+    if (currentChar == '\n' && previousChar == '\n') {
+      // 2 newlines in a row - the next char will be HTTP post data
+      break;
+    }
+    
+    if (currentChar == '\r') {
+      // Ignore
+    } else {
+      previousChar = currentChar;
+    }
+  }
+}
+
+/*
+ * Open port 80, see if anyone connects, and
+ * if they do handle their HTTP request.
+ */
 void checkForHTTPConnections() {
   // See if a client has attached to port 80
   EthernetClient serverClient = server.available();
   
   if (serverClient) {
-    char buffer[35];
+    char buffer[100];
+    char dataFromBrowser[100];
     
-    // an http request ends with a blank line
-    boolean currentLineIsBlank = true;
+    // Skip the HTTP headers
+    skipHTTPHeaders(serverClient);
+    short i = 0;
     while (serverClient.connected()) {
-      if (serverClient.available()) {
+      while (serverClient.available()) {
         char c = serverClient.read();
         //Serial.write(c);
-        // if you've gotten to the end of the line (received a newline
-        // character) and the line is blank, the http request has ended,
-        // so you can send a reply
-        if (c == '\n' && currentLineIsBlank) {
-          // send a standard http response header
-          strcpy_P(buffer, (char*)pgm_read_word(&(httpResponseStrings[0])));  // Copy "HTTP/1.1 200 OK" out of flash strings
+        dataFromBrowser[i++] = c;
+      }
+      dataFromBrowser[i] = '\0';
+      
+      boolean newSettingsReceived = i > 0;
+      
+      if (newSettingsReceived) {
+        saveNewSettings(dataFromBrowser);
+      }
+      
+      // Send the HTTP response headers
+      strcpy_P(buffer, (char*)pgm_read_word(&(httpResponseStrings[0])));  // Copy "HTTP/1.1 200 OK" out of flash strings
+      serverClient.println(buffer);
+      strcpy_P(buffer, (char*)pgm_read_word(&(httpResponseStrings[1])));  // Copy "Content-Type: text/html" out of flash strings
+      serverClient.println(buffer);
+      strcpy_P(buffer, (char*)pgm_read_word(&(httpResponseStrings[2])));  // Copy "Connection: close" out of flash strings
+      serverClient.println(buffer);  // the connection will be closed after completion of the response
+      serverClient.println();
+      
+      if (newSettingsReceived) {
+        // We read a response from the HTML form so just return something like <html>Settings Saved</html>
+        strcpy_P(buffer, (char*)pgm_read_word(&(httpResponseStrings[4])));
+        serverClient.println(buffer);
+        strcpy_P(buffer, (char*)pgm_read_word(&(httpResponseStrings[3])));
+        serverClient.println(buffer);
+      } else {
+        // No form data received on this connection so must be a request for the HTML form
+        for (int i = 4; i < 19; i++) {
+          strcpy_P(buffer, (char*)pgm_read_word(&(httpResponseStrings[i])));  // Copy each line of HTML text out of flash strings
           serverClient.println(buffer);
-          strcpy_P(buffer, (char*)pgm_read_word(&(httpResponseStrings[1])));  // Copy "HTTP/1.1 200 OK" out of flash strings
-          serverClient.println(buffer);
-          strcpy_P(buffer, (char*)pgm_read_word(&(httpResponseStrings[2])));  // Copy "HTTP/1.1 200 OK" out of flash strings
-          serverClient.println(buffer);  // the connection will be closed after completion of the response
-          serverClient.println();
-          strcpy_P(buffer, (char*)pgm_read_word(&(httpResponseStrings[3])));  // Copy "HTTP/1.1 200 OK" out of flash strings
-          serverClient.println(buffer);
-          strcpy_P(buffer, (char*)pgm_read_word(&(httpResponseStrings[4])));  // Copy "HTTP/1.1 200 OK" out of flash strings
-          serverClient.println(buffer);
-          strcpy_P(buffer, (char*)pgm_read_word(&(httpResponseStrings[5])));  // Copy "HTTP/1.1 200 OK" out of flash strings
-          serverClient.println(buffer);
-          strcpy_P(buffer, (char*)pgm_read_word(&(httpResponseStrings[6])));  // Copy "HTTP/1.1 200 OK" out of flash strings
-          serverClient.println(buffer);
-          strcpy_P(buffer, (char*)pgm_read_word(&(httpResponseStrings[7])));  // Copy "HTTP/1.1 200 OK" out of flash strings
-          serverClient.println(buffer);
-          strcpy_P(buffer, (char*)pgm_read_word(&(httpResponseStrings[8])));  // Copy "HTTP/1.1 200 OK" out of flash strings
-          serverClient.println(buffer);
-          strcpy_P(buffer, (char*)pgm_read_word(&(httpResponseStrings[9])));  // Copy "HTTP/1.1 200 OK" out of flash strings
-          serverClient.println(buffer);
-          strcpy_P(buffer, (char*)pgm_read_word(&(httpResponseStrings[10])));  // Copy "HTTP/1.1 200 OK" out of flash strings
-          serverClient.println(buffer);
-          // output the value of each analog input pin
-          serverClient.print("a 10</br>");
-          serverClient.print(timeSinceLastLiveConnAttempt);
-          strcpy_P(buffer, (char*)pgm_read_word(&(httpResponseStrings[11])));  // Copy "HTTP/1.1 200 OK" out of flash strings
-          serverClient.println(buffer);
-          break;
-        }
-        if (c == '\n') {
-          // you're starting a new line
-          currentLineIsBlank = true;
-        }
-        else if (c != '\r') {
-          // you've gotten a character on the current line
-          currentLineIsBlank = false;
         }
       }
-    }
-    
-    // give the web browser time to receive the data
-    delay(5);
-    // close the connection:
-    serverClient.stop();
+      
+      // Flush data to the client
+      serverClient.flush();
+      
+      // Give the browser a chance to receive the data
+      delay(10);
+      
+      // Close the connection
+      serverClient.stop();
+      
+      if (newSettingsReceived) {
+        delay(4000);
+        showMessages();
+      }
+    }    
   }
 }
 
@@ -592,6 +642,8 @@ void setup() {
   timeSinceLastLiveConnAttempt = millis() - 60000;
   
   showMessages();
+  
+  //printNetworkSettings();
 }
 
 void loop() {
@@ -610,7 +662,6 @@ void loop() {
   for (i = 0; i < 4; i++) {
     
     buttonReadState = digitalRead(A0 + i);
-    //Serial.println(buttonReadState);
   
     // If the button is pressed, print on screen
     if (buttonReadState == LOW && (buttonState & (1 << i))) {
