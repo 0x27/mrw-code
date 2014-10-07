@@ -17,6 +17,7 @@
 #include <SPI.h>
 #include <Ethernet.h>
 #include <LiquidCrystal.h>
+#include <EEPROM.h>
 #include <avr/pgmspace.h>
 //#include <PubSubClient.h>
 
@@ -26,8 +27,8 @@ LiquidCrystal lcd(7, 6, 5, 4, 3, 2);
 prog_char menuItem01[] PROGMEM = "        Menu"; 
 prog_char menuItem02[] PROGMEM = "- View network info";
 prog_char menuItem03[] PROGMEM = "- Ping server";
-prog_char menuItem04[] PROGMEM = "- Item Three";
-prog_char menuItem05[] PROGMEM = "- Item Four";
+prog_char menuItem04[] PROGMEM = "- Read property";
+prog_char menuItem05[] PROGMEM = "- Restore defaults";
 prog_char menuItem06[] PROGMEM = "- Item Five";
 PROGMEM const char *menuStrings[] =
 {   
@@ -71,7 +72,7 @@ prog_char httpResponseString09[] PROGMEM = "<h3>Config Utility</h3><p></p>";
 prog_char httpResponseString10[] PROGMEM = "<hr align=\"left\" width=\"300\"><p></p>";
 prog_char httpResponseString11[] PROGMEM = "<form name=\"form1\" action=\"\" method=\"post\">";
 prog_char httpResponseString12[] PROGMEM = "<label for=\"bltimer\">Backlight timer (seconds)</label>";
-prog_char httpResponseString13[] PROGMEM = "<input type=\"text\" name=\"blttimer\" id=\"bltimer\" maxlength=\"3\" size=\"8\"/><p></p>";
+prog_char httpResponseString13[] PROGMEM = "<input type=\"text\" name=\"blttimer\" id=\"blttimer\" maxlength=\"3\" size=\"8\"/><p></p>";
 prog_char httpResponseString14[] PROGMEM = "<label for=\"data\">Some other data</label>";
 prog_char httpResponseString15[] PROGMEM = "<input type=\"text\" name=\"data\" id=\"data\" maxlength=\"10\" size=\"10\"/><p></p>";
 prog_char httpResponseString16[] PROGMEM = "<hr align=\"left\" width=\"300\"><p></p>";
@@ -464,13 +465,208 @@ void checkForSerialData() {
 }
 
 /*
+ * Reset to default settings
+ */
+void resetToDefaults() {
+  Serial.println("Resetting to defaults");
+  EEPROM.write(0, 255);
+  EEPROM.write(1, 255);
+  EEPROM.write(2, 255);
+  
+  lcd.clear();
+  lcd.setCursor(0, 0);
+  lcd.print("Reset to factory");
+  lcd.setCursor(0, 1);
+  lcd.print("settings?");
+}
+
+/*
+ * Test method
+ */
+void readExampleProperty() {
+  char propertyValue[30];
+  propertyValue[0] = '\0';
+  readProperty("data", propertyValue);
+  if (strlen(propertyValue) > 0) {
+    Serial.println("Found data value");
+    Serial.println(propertyValue); 
+  }
+
+  propertyValue[0] = '\0';
+  readProperty("blttimer", propertyValue);
+  if (strlen(propertyValue) > 0) {
+    Serial.println("Found blttimer value");
+    Serial.println(propertyValue); 
+  }
+  
+  propertyValue[0] = '\0';
+  readProperty("data", propertyValue);
+  if (strlen(propertyValue) > 0) {
+    Serial.println("Found data value");
+    Serial.println(propertyValue); 
+  }
+  
+  propertyValue[0] = '\0';
+  readProperty("unknown", propertyValue);
+  if (strlen(propertyValue) > 0) {
+    Serial.println("Found unknown value");
+    Serial.println(propertyValue); 
+  }
+}
+
+/*
+ * Read the URL-encoded post form data from EEPROM and print it out.
+ *
+ * The first 3 bytes of EEPROM are reserved for counter data (bytes 1 and 2) and data length (byte 3).
+ */
+void readProperty(char* propertyName, char* propertyValue) {
+  short byte0 = EEPROM.read(0);
+  short byte1 = EEPROM.read(1);
+  short dataLength = EEPROM.read(2);
+  short dataCursor = (byte0 << 8) | (byte1);
+  
+  // (255 & 255) is -1
+  if (dataCursor == -1) {
+    // No settings saved yet
+    //Serial.println("No settings saved yet");
+  } else {
+    //Serial.println("Reading settings...");
+    //Serial.print("Byte 0: ");
+    //Serial.println(byte0);
+    //Serial.print("Byte 1: ");
+    //Serial.println(byte1);
+    //Serial.print("Byte 2: ");
+    //Serial.println(dataLength);
+    //Serial.print("Data: ");
+    for (short i = 0; i < dataLength; i++) {
+      //Serial.print((char)EEPROM.read(dataCursor + i));
+    }
+    //Serial.println("");
+    
+    // Read each property into a local array one at a time
+    short localCursor = 0;
+    
+    for (short i = 0; i < dataLength; i++) {
+      propertyValue[localCursor] = EEPROM.read(dataCursor + i);
+      
+      if (propertyValue[localCursor] == '&' || i == (dataLength - 1)) {
+        
+        if (i == (dataLength - 1)) {
+          propertyValue[localCursor+1] = '\0';
+          //Serial.println("Found end data");
+        } else {
+          propertyValue[localCursor] = '\0';
+          //Serial.println("Found an ampersand");
+        }
+        
+        char* propertyNameLocation = strstr(propertyValue, propertyName);
+        
+        if (propertyNameLocation != NULL) {
+          //Serial.println("Found prop we want");
+          // The property we just read from EEPROM is the one we were looking for
+          char* propertyValueLocation = strstr(propertyValue, "=");
+          
+          if (propertyValueLocation != NULL) {
+            //Serial.println("Found = sign");
+            // We've now moved on to the '=' which means the remainder is the property value
+            strcpy(propertyValue, propertyValueLocation+1);
+            //Serial.println("Property value found");
+            //Serial.println(propertyValue);
+            break;
+          } else {
+            // There's something wrong! There should be an '=' sign. Print some error here?
+          }
+        } else {
+          // We'e found a property which isn't the one we're looking for
+          propertyValue[0] = '\0';
+          localCursor = 0;
+        }
+      } else {
+        localCursor++;
+      }
+    }
+  }
+  
+  //lcd.clear();
+  //lcd.setCursor(0, 0);
+  //lcd.print("Settings read");
+  //lcd.setCursor(0, 1);
+  //lcd.print(propertyValue);
+}
+
+/*
  * Take a URL-encoded post form string and
  * save each of the individual properties to
  * EEPROM.
  */
-void saveNewSettings(char * httpFormData) {
+void saveSettings(char * httpFormData) {
   Serial.println("Saving settings:");
+  
+  Serial.println("3 b b s...");
+  Serial.println(EEPROM.read(0));
+  Serial.println(EEPROM.read(1));
+  Serial.println(EEPROM.read(2));
+  
+  // The first 2 bytes in EEPROM indicate (big endian) where the data should be
+  // stored. On every re-write of the settings the counter is incremented
+  // so we rotate the section of EEPROM that data is stored to. EEPROM has
+  // 100k writes before it's beyond it's guaranteed lifetime so this 
+  // extends it by rotating through the different sections of EEPROM.
+  short previousDataCursor = (EEPROM.read(0) << 8) | EEPROM.read(1);
+  short previousDataLength = EEPROM.read(2);
+  short newDataLength = strlen(httpFormData);
+  short newDataCursor = 0;
+  
+  if (newDataLength > 256) {
+    lcd.clear();
+    lcd.setCursor(0, 0);
+    lcd.print("Error. Settings too");
+    lcd.setCursor(0, 1);
+    lcd.print("long for EEPROM");
+    delay(10000);
+  }
+  
+  // FYI the 3rd byte in EEPROM indicates the saved data length.
+  
+  // If the first 2 bytes are 255 each, it means the factory defaults are
+  // set. Now we can set the cursor to zero.
+  if (previousDataCursor == -1) {
+    Serial.println("Setting cursor bytes to zero");
+    EEPROM.write(0, 0);
+    EEPROM.write(1, 0);
+    newDataCursor = 3;
+  } else {
+    // If the cursor is initialised to some value, move it on
+    // past the previous data length so we're writing to a new area in EEPROM
+    newDataCursor = previousDataCursor + previousDataLength;
+    if ((newDataCursor + newDataLength) > 1023) {
+      newDataCursor = 3;
+    }
+  }
+  
+  Serial.print("New cursor = ");
+  Serial.println(newDataCursor);
+  
+  Serial.print("New length = ");
+  Serial.println(newDataLength);
+  
+  // Now store the new cursor and new data length back in the first 3 bytes
+  EEPROM.write(0, (newDataCursor >> 8) & 255);
+  EEPROM.write(1, newDataCursor & 255);
+  if (newDataLength != previousDataLength) EEPROM.write(2, newDataLength);
+  
+  Serial.println("f 3 b a s...");
+  Serial.println(EEPROM.read(0));
+  Serial.println(EEPROM.read(1));
+  Serial.println(EEPROM.read(2));
+  
+  Serial.println("The data is: ");
   Serial.println(httpFormData);
+  
+  Serial.println("Writing the data...");
+  for (short i = 0; i < newDataLength; i++) {
+    EEPROM.write(newDataCursor + i, httpFormData[i]);
+  }
   Serial.println("Saved");
   lcd.clear();
   lcd.setCursor(0, 0);
@@ -528,7 +724,7 @@ void checkForHTTPConnections() {
       boolean newSettingsReceived = i > 0;
       
       if (newSettingsReceived) {
-        saveNewSettings(dataFromBrowser);
+        saveSettings(dataFromBrowser);
       }
       
       // Send the HTTP response headers
@@ -571,6 +767,9 @@ void checkForHTTPConnections() {
   }
 }
 
+/*
+ * Standard arduino startup routine
+ */
 void setup() {
   byte mac[] = {0x00, 0xAA, 0xBB, 0xCC, 0xDE, 0x02 };
   
@@ -591,8 +790,8 @@ void setup() {
   
   menus[0].menuItems[1].func = &printNetworkSettings;
   menus[0].menuItems[2].func = &pingServer;
-  menus[0].menuItems[3].func = &testItemThree;
-  menus[0].menuItems[4].func = &testItemFour;
+  menus[0].menuItems[3].func = &readExampleProperty;
+  menus[0].menuItems[4].func = &resetToDefaults;
   
   messages[0][0] = messages[1][0] = messages[2][0] = messages[3][0] = messages[4][0] = messages[5][0] = messages[6][0] = messages[7][0] = '\0';
   
