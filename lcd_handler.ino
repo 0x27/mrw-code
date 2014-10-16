@@ -1,17 +1,7 @@
 /*
-  DHCP-based IP printer
- 
- This sketch uses the DHCP extensions to the Ethernet library
- to get an IP address via DHCP and print the address obtained.
- using an Arduino Wiznet Ethernet shield. 
- 
- Circuit:
- * Ethernet shield attached to pins 10, 11, 12, 13
- 
- created 12 April 2011
- modified 9 Apr 2012
- by Tom Igoe
- 
+  Firmware for Arduino-based USB/LCD interface with Ethernet adapter
+  
+  @copyright Matthew Whitehead 2014 
  */
 
 #include <SPI.h>
