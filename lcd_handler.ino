@@ -21,15 +21,21 @@
 #include <avr/pgmspace.h>
 //#include <PubSubClient.h>
 
+// Comment out to make production build
+#define DEV
+
 LiquidCrystal lcd(7, 6, 5, 4, 3, 2);
+
+prog_char versionNumber[] PROGMEM = "Version: 0.1.0";
+PROGMEM const char *versionString[] = {versionNumber};
 
 // Strings for displaying on the LCD - stored in flash memory to save space in SRAM
 prog_char menuItem01[] PROGMEM = "        Menu"; 
 prog_char menuItem02[] PROGMEM = "- View network info";
 prog_char menuItem03[] PROGMEM = "- Ping server";
-prog_char menuItem04[] PROGMEM = "- Read property";
+prog_char menuItem04[] PROGMEM = "- Show settings";
 prog_char menuItem05[] PROGMEM = "- Restore defaults";
-prog_char menuItem06[] PROGMEM = "- Item Five";
+prog_char menuItem06[] PROGMEM = "- Version info";
 PROGMEM const char *menuStrings[] =
 {   
   menuItem01,
@@ -59,7 +65,7 @@ PROGMEM const char *httpStrings[] =
   httpString07
 };
 
-// Strings for sending to a connected browser
+// Static strings for sending to a connected browser
 prog_char httpResponseString01[] PROGMEM = "HTTP/1.1 200 OK"; 
 prog_char httpResponseString02[] PROGMEM = "Content-Type: text/html";
 prog_char httpResponseString03[] PROGMEM = "Connection: close";
@@ -69,17 +75,19 @@ prog_char httpResponseString06[] PROGMEM = "<html>";
 prog_char httpResponseString07[] PROGMEM = "<title>Config Utility</title>";
 prog_char httpResponseString08[] PROGMEM = "<body style=\"font-family:arial\">";
 prog_char httpResponseString09[] PROGMEM = "<h3>Config Utility</h3><p></p>";
-prog_char httpResponseString10[] PROGMEM = "<hr align=\"left\" width=\"300\"><p></p>";
-prog_char httpResponseString11[] PROGMEM = "<form name=\"form1\" action=\"\" method=\"post\">";
-prog_char httpResponseString12[] PROGMEM = "<label for=\"bltimer\">Backlight timer (seconds)</label>";
-prog_char httpResponseString13[] PROGMEM = "<input type=\"text\" name=\"blttimer\" id=\"blttimer\" maxlength=\"3\" size=\"8\"/><p></p>";
-prog_char httpResponseString14[] PROGMEM = "<label for=\"data\">Some other data</label>";
-prog_char httpResponseString15[] PROGMEM = "<input type=\"text\" name=\"data\" id=\"data\" maxlength=\"10\" size=\"10\"/><p></p>";
-prog_char httpResponseString16[] PROGMEM = "<hr align=\"left\" width=\"300\"><p></p>";
-prog_char httpResponseString17[] PROGMEM = "<input type=\"submit\" value=\"Save\"/>";
-prog_char httpResponseString18[] PROGMEM = "</form>";
-prog_char httpResponseString19[] PROGMEM = "</body>";
-prog_char httpResponseString20[] PROGMEM = "</html>";
+prog_char httpResponseString10[] PROGMEM = "<p> "; // Place to insert the "Version: 1.0.0" text
+prog_char httpResponseString11[] PROGMEM = "</p><p></p>";
+prog_char httpResponseString12[] PROGMEM = "<hr align=\"left\" width=\"300\"><p></p>";
+prog_char httpResponseString13[] PROGMEM = "<form name=\"form1\" action=\"\" method=\"post\">";
+prog_char httpResponseString14[] PROGMEM = "<label for=\"bltimer\">Backlight timer (seconds)</label>";
+prog_char httpResponseString15[] PROGMEM = "<input type=\"text\" name=\"blttimer\" id=\"blttimer\" maxlength=\"3\" size=\"8\"/><p></p>";
+prog_char httpResponseString16[] PROGMEM = "<label for=\"data\">Some other data</label>";
+prog_char httpResponseString17[] PROGMEM = "<input type=\"text\" name=\"data\" id=\"data\" maxlength=\"10\" size=\"10\"/><p></p>";
+prog_char httpResponseString18[] PROGMEM = "<hr align=\"left\" width=\"300\"><p></p>";
+prog_char httpResponseString19[] PROGMEM = "<input type=\"submit\" value=\"Save\"/>";
+prog_char httpResponseString20[] PROGMEM = "</form>";
+prog_char httpResponseString21[] PROGMEM = "</body>";
+prog_char httpResponseString22[] PROGMEM = "</html>";
 PROGMEM const char *httpResponseStrings[] =
 {   
   httpResponseString01,httpResponseString02,httpResponseString03,
@@ -88,9 +96,19 @@ PROGMEM const char *httpResponseStrings[] =
   httpResponseString10,httpResponseString11,httpResponseString12,
   httpResponseString13,httpResponseString14,httpResponseString15,
   httpResponseString16,httpResponseString17,httpResponseString18,
-  httpResponseString19,httpResponseString20
+  httpResponseString19,httpResponseString20,httpResponseString21,
+  httpResponseString22
 };
 
+// Error strings for sending to a connected browser
+prog_char httpErrorString01[] PROGMEM = "HTTP/1.1 413 Request Entity too Large"; 
+prog_char httpErrorString02[] PROGMEM = "Content-Type: text/html";
+prog_char httpErrorString03[] PROGMEM = "Connection: close";
+PROGMEM const char *httpErrorStrings[] =
+{   
+  httpErrorString01,httpErrorString02,httpErrorString03
+};
+  
 byte numberOfMessages = 0;
 byte messageCursor = 0;
 char messages[6][60];
@@ -121,7 +139,8 @@ struct menu *currentMenu;
 byte insideMenuFunction = 0;
 
 #define BACKLIGHTPIN 9
-#define MAXTIMEBACKLIT 40
+#define DEFAULTBACKLIGHTTIME 10
+#define MAXBACKLIGHTTIME 30
 int brightness = 255;
 
 byte buttonReadState = 0;
@@ -286,18 +305,21 @@ void pingServer() {
   timeSinceLastLiveConnAttempt = millis() - 60000;
 }
 
-void testItemThree() {
+/*
+ * Show basic build information on screen
+ */
+void showVersionInfo() {
+  char tempBuffer[21];
+  tempBuffer[0] = '\0';
+  strcpy_P(tempBuffer, (char*)pgm_read_word(&(versionString[0])));  // Copy version information out of flash strings
   lcd.clear();
   lcd.setCursor(0, 0);
-  lcd.print("Test of item 3");
+  lcd.print(tempBuffer);
 }
 
-void testItemFour() {
-  lcd.clear();
-  lcd.setCursor(0, 0);
-  lcd.print("Test of item 4");
-}
-
+/*
+ * Define the actions to take when OK is pressed
+ */
 void okButtonPressed() {
   commonButtonFunctions();
   
@@ -308,6 +330,10 @@ void okButtonPressed() {
   }
 }
 
+/*
+ * Define the actions to take when CANCEL is pressed
+ 
+ */
 void cancelButtonPressed() {
   commonButtonFunctions();
   
@@ -403,6 +429,9 @@ void showMessages() {
   char messageTitle[21];
   messageTitle[20] = '\0';
   
+  // Reset our position in the menu structure to the root menu
+  currentMenu = 0;
+  
   lcd.clear();
   lcd.setCursor(0, 0);
   
@@ -483,20 +512,28 @@ void resetToDefaults() {
 /*
  * Test method
  */
-void readExampleProperty() {
+void showSettings() {
   char propertyValue[30];
   propertyValue[0] = '\0';
   readProperty("data", propertyValue);
   if (strlen(propertyValue) > 0) {
     Serial.println("Found data value");
     Serial.println(propertyValue); 
+    lcd.clear();
+    lcd.setCursor(0, 0);
+    lcd.print("Data: ");
+    lcd.print(propertyValue);
   }
 
   propertyValue[0] = '\0';
   readProperty("blttimer", propertyValue);
   if (strlen(propertyValue) > 0) {
     Serial.println("Found blttimer value");
-    Serial.println(propertyValue); 
+    Serial.println(propertyValue);
+    lcd.setCursor(0, 1);
+    lcd.print("Backlight: ");
+    lcd.print(propertyValue); 
+    lcd.print("(s)");
   }
   
   propertyValue[0] = '\0';
@@ -600,77 +637,88 @@ void readProperty(char* propertyName, char* propertyValue) {
  * EEPROM.
  */
 void saveSettings(char * httpFormData) {
-  Serial.println("Saving settings:");
   
-  Serial.println("3 b b s...");
-  Serial.println(EEPROM.read(0));
-  Serial.println(EEPROM.read(1));
-  Serial.println(EEPROM.read(2));
-  
-  // The first 2 bytes in EEPROM indicate (big endian) where the data should be
-  // stored. On every re-write of the settings the counter is incremented
-  // so we rotate the section of EEPROM that data is stored to. EEPROM has
-  // 100k writes before it's beyond it's guaranteed lifetime so this 
-  // extends it by rotating through the different sections of EEPROM.
-  short previousDataCursor = (EEPROM.read(0) << 8) | EEPROM.read(1);
-  short previousDataLength = EEPROM.read(2);
-  short newDataLength = strlen(httpFormData);
-  short newDataCursor = 0;
-  
-  if (newDataLength > 256) {
+  if (strlen(httpFormData) > 256) {
+    // This is too much data - we don't want to store it. Shouldn't ever happen.
     lcd.clear();
     lcd.setCursor(0, 0);
-    lcd.print("Error. Settings too");
-    lcd.setCursor(0, 1);
-    lcd.print("long for EEPROM");
-    delay(10000);
-  }
-  
-  // FYI the 3rd byte in EEPROM indicates the saved data length.
-  
-  // If the first 2 bytes are 255 each, it means the factory defaults are
-  // set. Now we can set the cursor to zero.
-  if (previousDataCursor == -1) {
-    Serial.println("Setting cursor bytes to zero");
-    EEPROM.write(0, 0);
-    EEPROM.write(1, 0);
-    newDataCursor = 3;
+    lcd.print("Config data too long");
+    turnBacklightOn();
   } else {
-    // If the cursor is initialised to some value, move it on
-    // past the previous data length so we're writing to a new area in EEPROM
-    newDataCursor = previousDataCursor + previousDataLength;
-    if ((newDataCursor + newDataLength) > 1023) {
-      newDataCursor = 3;
+    Serial.println("Saving settings:");
+  
+    Serial.println("3 b b s...");
+    Serial.println(EEPROM.read(0));
+    Serial.println(EEPROM.read(1));
+    Serial.println(EEPROM.read(2));
+  
+    // The first 2 bytes in EEPROM indicate (big endian) where the data should be
+    // stored. On every re-write of the settings the counter is incremented
+    // so we rotate the section of EEPROM that data is stored to. EEPROM has
+    // 100k writes before it's beyond it's guaranteed lifetime so this 
+    // extends it by rotating through the different sections of EEPROM.
+    short previousDataCursor = (EEPROM.read(0) << 8) | EEPROM.read(1);
+    short previousDataLength = EEPROM.read(2);
+    short newDataLength = strlen(httpFormData);
+    short newDataCursor = 0;
+  
+    if (newDataLength > 256) {
+      lcd.clear();
+      lcd.setCursor(0, 0);
+      lcd.print("Error. Settings too");
+      lcd.setCursor(0, 1);
+      lcd.print("long for EEPROM");
+      delay(10000);
     }
+  
+    // FYI the 3rd byte in EEPROM indicates the saved data length.
+  
+    // If the first 2 bytes are 255 each, it means the factory defaults are
+    // set. Now we can set the cursor to zero.
+    if (previousDataCursor == -1) {
+      Serial.println("Setting cursor bytes to zero");
+      EEPROM.write(0, 0);
+      EEPROM.write(1, 0);
+      newDataCursor = 3;
+    } else {
+      // If the cursor is initialised to some value, move it on
+      // past the previous data length so we're writing to a new area in EEPROM
+      newDataCursor = previousDataCursor + previousDataLength;
+      if ((newDataCursor + newDataLength) > 1023) {
+        newDataCursor = 3;
+      }
+    }
+  
+    Serial.print("New cursor = ");
+    Serial.println(newDataCursor);
+  
+    Serial.print("New length = ");
+    Serial.println(newDataLength);
+  
+    // Now store the new cursor and new data length back in the first 3 bytes
+    EEPROM.write(0, (newDataCursor >> 8) & 255);
+    EEPROM.write(1, newDataCursor & 255);
+    if (newDataLength != previousDataLength) EEPROM.write(2, newDataLength);
+  
+    //Serial.println("f 3 b a s...");
+    //Serial.println(EEPROM.read(0));
+    //Serial.println(EEPROM.read(1));
+    //Serial.println(EEPROM.read(2));
+  
+    Serial.println("The data is: ");
+    Serial.println(httpFormData);
+  
+    Serial.println("Writing the data...");
+    for (short i = 0; i < newDataLength; i++) {
+      EEPROM.write(newDataCursor + i, httpFormData[i]);
+    }
+    Serial.println("Saved");
+  
+    turnBacklightOn();
+    lcd.clear();
+    lcd.setCursor(0, 0);
+    lcd.print("Settings Saved");
   }
-  
-  Serial.print("New cursor = ");
-  Serial.println(newDataCursor);
-  
-  Serial.print("New length = ");
-  Serial.println(newDataLength);
-  
-  // Now store the new cursor and new data length back in the first 3 bytes
-  EEPROM.write(0, (newDataCursor >> 8) & 255);
-  EEPROM.write(1, newDataCursor & 255);
-  if (newDataLength != previousDataLength) EEPROM.write(2, newDataLength);
-  
-  Serial.println("f 3 b a s...");
-  Serial.println(EEPROM.read(0));
-  Serial.println(EEPROM.read(1));
-  Serial.println(EEPROM.read(2));
-  
-  Serial.println("The data is: ");
-  Serial.println(httpFormData);
-  
-  Serial.println("Writing the data...");
-  for (short i = 0; i < newDataLength; i++) {
-    EEPROM.write(newDataCursor + i, httpFormData[i]);
-  }
-  Serial.println("Saved");
-  lcd.clear();
-  lcd.setCursor(0, 0);
-  lcd.print("Settings Saved");
 }
 
 /*
@@ -709,44 +757,64 @@ void checkForHTTPConnections() {
   if (serverClient) {
     char buffer[100];
     char dataFromBrowser[100];
+    boolean newSettingsReceived = false;
     
     // Skip the HTTP headers
     skipHTTPHeaders(serverClient);
     short i = 0;
     while (serverClient.connected()) {
-      while (serverClient.available()) {
+      while (serverClient.available() && i < 100) {
         char c = serverClient.read();
         //Serial.write(c);
         dataFromBrowser[i++] = c;
       }
-      dataFromBrowser[i] = '\0';
       
-      boolean newSettingsReceived = i > 0;
-      
-      if (newSettingsReceived) {
-        saveSettings(dataFromBrowser);
-      }
-      
-      // Send the HTTP response headers
-      strcpy_P(buffer, (char*)pgm_read_word(&(httpResponseStrings[0])));  // Copy "HTTP/1.1 200 OK" out of flash strings
-      serverClient.println(buffer);
-      strcpy_P(buffer, (char*)pgm_read_word(&(httpResponseStrings[1])));  // Copy "Content-Type: text/html" out of flash strings
-      serverClient.println(buffer);
-      strcpy_P(buffer, (char*)pgm_read_word(&(httpResponseStrings[2])));  // Copy "Connection: close" out of flash strings
-      serverClient.println(buffer);  // the connection will be closed after completion of the response
-      serverClient.println();
-      
-      if (newSettingsReceived) {
-        // We read a response from the HTML form so just return something like <html>Settings Saved</html>
-        strcpy_P(buffer, (char*)pgm_read_word(&(httpResponseStrings[4])));
+      // If thre's still data available after 100 chars, we don't want it. Give up.
+      if (serverClient.available()) {
+        // Send the HTTP response headers
+        strcpy_P(buffer, (char*)pgm_read_word(&(httpErrorStrings[0])));  // Copy "HTTP/1.1 413 Request Entity too Large" out of flash strings
         serverClient.println(buffer);
-        strcpy_P(buffer, (char*)pgm_read_word(&(httpResponseStrings[3])));
+        strcpy_P(buffer, (char*)pgm_read_word(&(httpErrorStrings[1])));  // Copy "Content-Type: text/html" out of flash strings
         serverClient.println(buffer);
+        strcpy_P(buffer, (char*)pgm_read_word(&(httpErrorStrings[2])));  // Copy "Connection: close" out of flash strings
+        serverClient.println(buffer);  // the connection will be closed after completion of the response
+        serverClient.println();
       } else {
-        // No form data received on this connection so must be a request for the HTML form
-        for (int i = 4; i < 19; i++) {
-          strcpy_P(buffer, (char*)pgm_read_word(&(httpResponseStrings[i])));  // Copy each line of HTML text out of flash strings
+        dataFromBrowser[i] = '\0';
+      
+        newSettingsReceived = i > 0;
+      
+        if (newSettingsReceived) {
+          saveSettings(dataFromBrowser);
+        }
+      
+        // Send the HTTP response headers
+        strcpy_P(buffer, (char*)pgm_read_word(&(httpResponseStrings[0])));  // Copy "HTTP/1.1 200 OK" out of flash strings
+        serverClient.println(buffer);
+        strcpy_P(buffer, (char*)pgm_read_word(&(httpResponseStrings[1])));  // Copy "Content-Type: text/html" out of flash strings
+        serverClient.println(buffer);
+        strcpy_P(buffer, (char*)pgm_read_word(&(httpResponseStrings[2])));  // Copy "Connection: close" out of flash strings
+        serverClient.println(buffer);  // the connection will be closed after completion of the response
+        serverClient.println();
+      
+        if (newSettingsReceived) {
+          // We read a response from the HTML form so just return something like <html>Settings Saved</html>
+          strcpy_P(buffer, (char*)pgm_read_word(&(httpResponseStrings[4])));
           serverClient.println(buffer);
+          strcpy_P(buffer, (char*)pgm_read_word(&(httpResponseStrings[3])));
+          serverClient.println(buffer);
+        } else {
+          // No form data received on this connection so must be a request for the HTML form
+          for (int i = 4; i < 19; i++) {
+            strcpy_P(buffer, (char*)pgm_read_word(&(httpResponseStrings[i])));  // Copy each line of HTML text out of flash strings
+            serverClient.println(buffer);
+          
+            // Special cases where we insert variable data
+            if (i == 9) {
+              strcpy_P(buffer, (char*)pgm_read_word(&(versionString[0])));  // Copy each line of HTML text out of flash strings
+              serverClient.println(buffer);
+            }
+          }
         }
       }
       
@@ -760,7 +828,7 @@ void checkForHTTPConnections() {
       serverClient.stop();
       
       if (newSettingsReceived) {
-        delay(4000);
+        delay(2500);
         showMessages();
       }
     }    
@@ -790,10 +858,11 @@ void setup() {
   
   menus[0].menuItems[1].func = &printNetworkSettings;
   menus[0].menuItems[2].func = &pingServer;
-  menus[0].menuItems[3].func = &readExampleProperty;
+  menus[0].menuItems[3].func = &showSettings;
   menus[0].menuItems[4].func = &resetToDefaults;
+  menus[0].menuItems[5].func = &showVersionInfo;
   
-  messages[0][0] = messages[1][0] = messages[2][0] = messages[3][0] = messages[4][0] = messages[5][0] = messages[6][0] = messages[7][0] = '\0';
+  messages[0][0] = messages[1][0] = messages[2][0] = messages[3][0] = messages[4][0] = messages[5][0] = '\0';
   
   // Sample messages
   sprintf(messages[0], "Here's sample message number one");
@@ -822,7 +891,7 @@ void setup() {
   
   turnBacklightOn();
   
- // Open serial communications and wait for port to open:
+  // Open serial communications and wait for port to open:
   Serial.begin(9600);
   
   // this check is only needed on the Leonardo:
@@ -838,21 +907,42 @@ void setup() {
       ;
   }
   
+#if defined(DEV)
+  printNetworkSettings();
+  delay(4000);
+#endif
+  
   timeSinceLastLiveConnAttempt = millis() - 60000;
   
   showMessages();
-  
-  //printNetworkSettings();
 }
 
+/*
+ * The standard Arduino loop function
+ */
 void loop() {
-  if ((millis() - timeSinceBacklightOn) > (MAXTIMEBACKLIT * 1000)) {
-    // No activity - turn backlight off
+  
+  // Read the saved blttimer value
+  int backlightTimer = DEFAULTBACKLIGHTTIME;
+  char backlightProperty[8];
+  backlightProperty[0] = '\0';
+  readProperty("blttimer", backlightProperty);
+  if (strlen(backlightProperty) > 0) {
+   // Convert the char array into an int
+   backlightTimer = atoi(backlightProperty);
+   if (backlightTimer > MAXBACKLIGHTTIME) {
+     backlightTimer = MAXBACKLIGHTTIME;
+   } else if (backlightTimer == 0) {
+     backlightTimer = DEFAULTBACKLIGHTTIME;
+   }
+  }
+  
+  if ((millis() - timeSinceBacklightOn) > (1000 * backlightTimer)) {
+    // No activity - turn backlight off and go back to the main screen
     if (backlightOn) turnBacklightOff();
     
     if (currentMenu) {
-      // We were in a menu
-      currentMenu = 0;
+      // We were in a menu      
       showMessages();
     }
   }
