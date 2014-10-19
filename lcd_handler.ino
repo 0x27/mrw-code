@@ -17,7 +17,7 @@
 LiquidCrystal lcd(7, 6, 5, 4, 3, 2);
 
 prog_char versionNumber[] PROGMEM = "Version: 0.1.0";
-PROGMEM const char *versionString[] = {versionNumber};
+PROGMEM const char *miscStrings[] = {versionNumber};
 
 // Strings for displaying on the LCD - stored in flash memory to save space in SRAM
 prog_char menuItem01[] PROGMEM = "        Menu"; 
@@ -70,14 +70,15 @@ prog_char httpResponseString11[] PROGMEM = "</p><p></p>";
 prog_char httpResponseString12[] PROGMEM = "<hr align=\"left\" width=\"300\"><p></p>";
 prog_char httpResponseString13[] PROGMEM = "<form name=\"form1\" action=\"\" method=\"post\">";
 prog_char httpResponseString14[] PROGMEM = "<label for=\"bltimer\">Backlight timer (seconds)</label>";
-prog_char httpResponseString15[] PROGMEM = "<input type=\"text\" name=\"blttimer\" id=\"blttimer\" maxlength=\"3\" size=\"8\"/><p></p>";
-prog_char httpResponseString16[] PROGMEM = "<label for=\"data\">Some other data</label>";
-prog_char httpResponseString17[] PROGMEM = "<input type=\"text\" name=\"data\" id=\"data\" maxlength=\"10\" size=\"10\"/><p></p>";
-prog_char httpResponseString18[] PROGMEM = "<hr align=\"left\" width=\"300\"><p></p>";
-prog_char httpResponseString19[] PROGMEM = "<input type=\"submit\" value=\"Save\"/>";
-prog_char httpResponseString20[] PROGMEM = "</form>";
-prog_char httpResponseString21[] PROGMEM = "</body>";
-prog_char httpResponseString22[] PROGMEM = "</html>";
+prog_char httpResponseString15[] PROGMEM = "<input type=\"text\" name=\"blttimer\" id=\"blttimer\" value=\"";
+prog_char httpResponseString16[] PROGMEM = "\" maxlength=\"2\" size=\"8\"/><p></p>";
+prog_char httpResponseString17[] PROGMEM = "<label for=\"data\">Some other data</label>";
+prog_char httpResponseString18[] PROGMEM = "<input type=\"text\" name=\"data\" id=\"data\" maxlength=\"10\" size=\"10\"/><p></p>";
+prog_char httpResponseString19[] PROGMEM = "<hr align=\"left\" width=\"300\"><p></p>";
+prog_char httpResponseString20[] PROGMEM = "<input type=\"submit\" value=\"Save\"/>";
+prog_char httpResponseString21[] PROGMEM = "</form>";
+prog_char httpResponseString22[] PROGMEM = "</body>";
+prog_char httpResponseString23[] PROGMEM = "</html>";
 PROGMEM const char *httpResponseStrings[] =
 {   
   httpResponseString01,httpResponseString02,httpResponseString03,
@@ -87,7 +88,7 @@ PROGMEM const char *httpResponseStrings[] =
   httpResponseString13,httpResponseString14,httpResponseString15,
   httpResponseString16,httpResponseString17,httpResponseString18,
   httpResponseString19,httpResponseString20,httpResponseString21,
-  httpResponseString22
+  httpResponseString22,httpResponseString23
 };
 
 // Error strings for sending to a connected browser
@@ -101,7 +102,7 @@ PROGMEM const char *httpErrorStrings[] =
   
 byte numberOfMessages = 0;
 byte messageCursor = 0;
-char messages[6][60];
+char messages[6][63];
 byte serialRXComplete = 1; // RX complete
 byte serialRXCursor = 0;
 byte backlightOn = 0;
@@ -131,7 +132,6 @@ byte insideMenuFunction = 0;
 #define BACKLIGHTPIN 9
 #define DEFAULTBACKLIGHTTIME 10
 #define MAXBACKLIGHTTIME 30
-int brightness = 255;
 
 byte buttonReadState = 0;
 byte buttonState = 0;
@@ -301,7 +301,7 @@ void pingServer() {
 void showVersionInfo() {
   char tempBuffer[21];
   tempBuffer[0] = '\0';
-  strcpy_P(tempBuffer, (char*)pgm_read_word(&(versionString[0])));  // Copy version information out of flash strings
+  strcpy_P(tempBuffer, (char*)pgm_read_word(&(miscStrings[0])));  // Copy version information out of flash strings
   lcd.clear();
   lcd.setCursor(0, 0);
   lcd.print(tempBuffer);
@@ -353,6 +353,9 @@ void cancelButtonPressed() {
   }
 }
 
+/*
+ * Define the actions to take when the RIGHT button is pressed
+ */
 void rightButtonPressed() {
   commonButtonFunctions();
   
@@ -368,6 +371,9 @@ void rightButtonPressed() {
   }
 }
 
+/*
+ * Define the actions to take when the LEFT button is pressed
+ */
 void leftButtonPressed() {
   commonButtonFunctions();
   
@@ -469,6 +475,7 @@ void checkForSerialData() {
   while (Serial.available()) {
     messages[numberOfMessages][serialRXCursor] = Serial.read();
     serialRXComplete = 0; // Not complete yet
+    
     if (messages[numberOfMessages][serialRXCursor] == ':') {
       // Message complete
       messages[numberOfMessages][serialRXCursor] = '\0';
@@ -478,7 +485,13 @@ void checkForSerialData() {
       showMessages();
       break;
     } else {
+      // Increment the cursor in our buffer. If we've hit our limit
+      // then go back to zero and start filling from there again until
+      // we hit a colon.
       serialRXCursor++;
+      if (serialRXCursor == 60) {
+        serialRXCursor = 0;
+      }
     }
   }
 }
@@ -487,7 +500,7 @@ void checkForSerialData() {
  * Reset to default settings
  */
 void resetToDefaults() {
-  Serial.println("Resetting to defaults");
+  //Serial.println("Resetting to defaults");
   EEPROM.write(0, 255);
   EEPROM.write(1, 255);
   EEPROM.write(2, 255);
@@ -507,8 +520,8 @@ void showSettings() {
   propertyValue[0] = '\0';
   readProperty("data", propertyValue);
   if (strlen(propertyValue) > 0) {
-    Serial.println("Found data value");
-    Serial.println(propertyValue); 
+    //Serial.println("Found data value");
+    //Serial.println(propertyValue); 
     lcd.clear();
     lcd.setCursor(0, 0);
     lcd.print("Data: ");
@@ -518,8 +531,8 @@ void showSettings() {
   propertyValue[0] = '\0';
   readProperty("blttimer", propertyValue);
   if (strlen(propertyValue) > 0) {
-    Serial.println("Found blttimer value");
-    Serial.println(propertyValue);
+    //Serial.println("Found blttimer value");
+    //Serial.println(propertyValue);
     lcd.setCursor(0, 1);
     lcd.print("Backlight: ");
     lcd.print(propertyValue); 
@@ -529,15 +542,15 @@ void showSettings() {
   propertyValue[0] = '\0';
   readProperty("data", propertyValue);
   if (strlen(propertyValue) > 0) {
-    Serial.println("Found data value");
-    Serial.println(propertyValue); 
+    //Serial.println("Found data value");
+    //Serial.println(propertyValue); 
   }
   
   propertyValue[0] = '\0';
   readProperty("unknown", propertyValue);
   if (strlen(propertyValue) > 0) {
-    Serial.println("Found unknown value");
-    Serial.println(propertyValue); 
+    //Serial.println("Found unknown value");
+    //Serial.println(propertyValue); 
   }
 }
 
@@ -545,6 +558,8 @@ void showSettings() {
  * Read the URL-encoded post form data from EEPROM and print it out.
  *
  * The first 3 bytes of EEPROM are reserved for counter data (bytes 1 and 2) and data length (byte 3).
+ *
+ * We only read up to 50 chars of property value and then give up to prevent buffer overflow.
  */
 void readProperty(char* propertyName, char* propertyValue) {
   short byte0 = EEPROM.read(0);
@@ -574,42 +589,48 @@ void readProperty(char* propertyName, char* propertyValue) {
     short localCursor = 0;
     
     for (short i = 0; i < dataLength; i++) {
-      propertyValue[localCursor] = EEPROM.read(dataCursor + i);
       
-      if (propertyValue[localCursor] == '&' || i == (dataLength - 1)) {
+      // Only read up to 50 bytes of property name, otherwise we could get buffer overflow
+      if (localCursor < 50) {
+        propertyValue[localCursor] = EEPROM.read(dataCursor + i);
+      
+        if (propertyValue[localCursor] == '&' || i == (dataLength - 1)) {
         
-        if (i == (dataLength - 1)) {
-          propertyValue[localCursor+1] = '\0';
-          //Serial.println("Found end data");
-        } else {
-          propertyValue[localCursor] = '\0';
-          //Serial.println("Found an ampersand");
-        }
-        
-        char* propertyNameLocation = strstr(propertyValue, propertyName);
-        
-        if (propertyNameLocation != NULL) {
-          //Serial.println("Found prop we want");
-          // The property we just read from EEPROM is the one we were looking for
-          char* propertyValueLocation = strstr(propertyValue, "=");
-          
-          if (propertyValueLocation != NULL) {
-            //Serial.println("Found = sign");
-            // We've now moved on to the '=' which means the remainder is the property value
-            strcpy(propertyValue, propertyValueLocation+1);
-            //Serial.println("Property value found");
-            //Serial.println(propertyValue);
-            break;
+          if (i == (dataLength - 1)) {
+            propertyValue[localCursor+1] = '\0';
+            //Serial.println("Found end data");
           } else {
-            // There's something wrong! There should be an '=' sign. Print some error here?
+            propertyValue[localCursor] = '\0';
+            //Serial.println("Found an ampersand");
+          }
+        
+          char* propertyNameLocation = strstr(propertyValue, propertyName);
+        
+          if (propertyNameLocation != NULL) {
+            //Serial.println("Found prop we want");
+            // The property we just read from EEPROM is the one we were looking for
+            char* propertyValueLocation = strstr(propertyValue, "=");
+          
+            if (propertyValueLocation != NULL) {
+              //Serial.println("Found = sign");
+              // We've now moved on to the '=' which means the remainder is the property value
+              strcpy(propertyValue, propertyValueLocation+1);
+              //Serial.println("Property value found");
+              //Serial.println(propertyValue);
+              break;
+            } else {
+              // There's something wrong! There should be an '=' sign. Print some error here?
+            }
+          } else {
+            // We'e found a property which isn't the one we're looking for
+            propertyValue[0] = '\0';
+            localCursor = 0;
           }
         } else {
-          // We'e found a property which isn't the one we're looking for
-          propertyValue[0] = '\0';
-          localCursor = 0;
+          localCursor++;
         }
       } else {
-        localCursor++;
+        break;
       }
     }
   }
@@ -635,12 +656,12 @@ void saveSettings(char * httpFormData) {
     lcd.print("Config data too long");
     turnBacklightOn();
   } else {
-    Serial.println("Saving settings:");
+    //Serial.println("Saving settings:");
   
-    Serial.println("3 b b s...");
-    Serial.println(EEPROM.read(0));
-    Serial.println(EEPROM.read(1));
-    Serial.println(EEPROM.read(2));
+    //Serial.println("3 b b s...");
+    //Serial.println(EEPROM.read(0));
+    //Serial.println(EEPROM.read(1));
+    //Serial.println(EEPROM.read(2));
   
     // The first 2 bytes in EEPROM indicate (big endian) where the data should be
     // stored. On every re-write of the settings the counter is incremented
@@ -666,7 +687,7 @@ void saveSettings(char * httpFormData) {
     // If the first 2 bytes are 255 each, it means the factory defaults are
     // set. Now we can set the cursor to zero.
     if (previousDataCursor == -1) {
-      Serial.println("Setting cursor bytes to zero");
+      //Serial.println("Setting cursor bytes to zero");
       EEPROM.write(0, 0);
       EEPROM.write(1, 0);
       newDataCursor = 3;
@@ -679,11 +700,11 @@ void saveSettings(char * httpFormData) {
       }
     }
   
-    Serial.print("New cursor = ");
-    Serial.println(newDataCursor);
+    //Serial.print("New cursor = ");
+    //Serial.println(newDataCursor);
   
-    Serial.print("New length = ");
-    Serial.println(newDataLength);
+    //Serial.print("New length = ");
+    //Serial.println(newDataLength);
   
     // Now store the new cursor and new data length back in the first 3 bytes
     EEPROM.write(0, (newDataCursor >> 8) & 255);
@@ -695,14 +716,14 @@ void saveSettings(char * httpFormData) {
     //Serial.println(EEPROM.read(1));
     //Serial.println(EEPROM.read(2));
   
-    Serial.println("The data is: ");
-    Serial.println(httpFormData);
+    //Serial.println("The data is: ");
+    //Serial.println(httpFormData);
   
-    Serial.println("Writing the data...");
+    //Serial.println("Writing the data...");
     for (short i = 0; i < newDataLength; i++) {
       EEPROM.write(newDataCursor + i, httpFormData[i]);
     }
-    Serial.println("Saved");
+    //Serial.println("Saved");
   
     turnBacklightOn();
     lcd.clear();
@@ -795,13 +816,21 @@ void checkForHTTPConnections() {
           serverClient.println(buffer);
         } else {
           // No form data received on this connection so must be a request for the HTML form
-          for (int i = 4; i < 19; i++) {
+          for (int i = 4; i < 20; i++) {
             strcpy_P(buffer, (char*)pgm_read_word(&(httpResponseStrings[i])));  // Copy each line of HTML text out of flash strings
             serverClient.println(buffer);
           
-            // Special cases where we insert variable data
+            // Special case where we insert variable data
             if (i == 9) {
-              strcpy_P(buffer, (char*)pgm_read_word(&(versionString[0])));  // Copy each line of HTML text out of flash strings
+              buffer[0] = '\0';
+              strcpy_P(buffer, (char*)pgm_read_word(&(miscStrings[0])));  // Copy the version information into the HTML response
+              serverClient.println(buffer);
+            }
+            
+            // Special case where we insert the value of the blttimer property
+            if (i == 14) {
+              buffer[0] = '\0';
+              readProperty("blttimer", buffer); // Copy the blttimer property into the HTML response
               serverClient.println(buffer);
             }
           }
@@ -914,7 +943,7 @@ void loop() {
   
   // Read the saved blttimer value
   int backlightTimer = DEFAULTBACKLIGHTTIME;
-  char backlightProperty[8];
+  char backlightProperty[51];
   backlightProperty[0] = '\0';
   readProperty("blttimer", backlightProperty);
   if (strlen(backlightProperty) > 0) {
