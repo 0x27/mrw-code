@@ -1,0 +1,57 @@
+<?php
+header("Content-type: text/html; charset=utf-8");
+
+/************************************************
+ * version $Revision: 65 $
+ * copyright (C) 2006 Rene de Groot
+ * license http://www.gnu.org/copyleft/gpl.html GNU/GPL
+ ************************************************/
+ 
+// error_reporting(E_ALL | E_STRICT); 
+error_reporting(E_ALL);
+
+include("mpd-control/mpd.php");
+include("mpd-control/connection.php");
+include("mpd-control/display.php");
+include("mpd-control/player.php");
+include("mpd-control/resources.php");
+include("mpd-control/style.php");
+include("mpd-control/icons.php");
+include("mpd-control/configuration.php");
+
+global $configuration ;
+include("styles/".$configuration["style"]."/icons.php");
+
+$mpd =& Resources::getMPD();
+
+?>
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+<link rel="stylesheet" type="text/css" href="<?php echo Style::getCSS();?>">
+<script type="text/javascript" src="mpd-control/async-updates.js"></script>
+<title>MPD control (Version $Revision: 65 $)</title>
+</head>
+
+<body>
+
+
+<?php
+  // Include a body as specifief my the configuration
+  include("styles/".$configuration["style"]."/body.php");
+?>
+
+
+<!-- Debug field, enable by loading index.php?DEBUG -->
+<?php
+if( array_key_exists("DEBUG", $_REQUEST) )
+{
+  echo '<textarea rows="30" cols="80" id="debug">';
+  echo $mpd->connection->getErrorMessage();
+  echo '</textarea>';
+}
+?>
+</body>
+</html>

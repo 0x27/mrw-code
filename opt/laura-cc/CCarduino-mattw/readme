@@ -1,0 +1,30 @@
+Plug the hardware together, inc mains power for the lights, and USB connection for the Arduino.
+
+At this point, the relays should click in sync at a steady rate. When the lights are mains-powered, the lights will switch on and off, all together, at the same rate.
+
+Unzip the CCarduino.zip file on to the laptop/PC to which the Arduino is connected.
+
+
+Customising and starting the perl app that subscribes to the Current Cost data and passes it to the Arduino
+==================================
+
+Go into the CCarduino directory and open the CCarduino.pl file in a text editor.
+
+At the top of the file, change the left and right topic names so that they are topics on which Current Cost data gets published.
+
+L_Reading = Green
+R_Reading = Red
+
+Also edit the serial port name if you know it to be different.
+
+From a terminal, start the CCarduino.pl script by running the CCarduino.sh script (the .sh script calls the .pl script).
+
+The terminal displays the readings that are being received.
+
+You should be able to see the lights flash faster as the numbers go up. That is, the more electricity being used, the faster the lights flash.
+
+
+Debugging
+=========
+
+Use the ia92 support pack. Subscribe on PowerMeter/CC/username

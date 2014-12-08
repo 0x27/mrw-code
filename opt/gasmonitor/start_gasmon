@@ -1,0 +1,6 @@
+modprobe -r pl2303
+modprobe pl2303
+date >> /tmp/gasmon.log
+echo "Gas monitor app started" >> /tmp/gasmon.log
+perl -I /home/mwhitehead/opt/gasmonitor /home/mwhitehead/opt/gasmonitor/gasmonitor.pl >> /dev/null 2>>/tmp/gasmon.log &
+
