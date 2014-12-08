@@ -1,0 +1,35 @@
+initial setup:
+
+change set_serial to refer to your serial port (most likely /dev/ttyUSB0)
+
+change currentcost.pl 
+  your name (e.g. andy)
+  identify the serial port (as in set_serial)
+  IP address of your broker (probably 127.0.0.1)
+
+in nanobroker.cfg
+  change the xxx on the first line to your initials (number of characters doesn't have to be 3!)
+  e.g. ASC_realtime
+  this is to uniquely identify your nanobroker to the broker on the internet
+
+
+
+to start things running:
+
+start nanobroker
+./NanoBroker
+(or 
+nohup ./Nanobroker >> /dev/null &
+to background it)
+
+start the currentcost application
+./start_cc
+
+
+To see the published data, subscribe (e.g. using the java MQTT gui client (IA92 supportpac, linked from mqtt.org))
+to PowerMeter/CC/yourname (where "yourname" is the name you set in currentcost.pl) to see the power data
+and PowerMeter/temp/yourname to see the temperature
+
+Any problems or questions to andysc :)
+
+

@@ -1,0 +1,141 @@
+// Blink LEDs at a rate specified by the value of the readings on the incoming CC streams.
+
+#define GREEN 12 //the pin for the green LED relay - to pair with L_topic
+#define RED 13 //the pin for the red LED relay - to pair with R_topic
+
+byte inByte = 0; // incoming bytes from Serial
+char buffer[5] ; // buffer for Serial??
+int pointer = 0; // character in the buffer after the marker (L or R)
+
+int reading = 1000; //value constructed as an int from what was in the serial buffers
+
+int state = 0; // current state of green LED relay
+unsigned long time = 0; // The current number of milliseconds since Arduino reset.
+
+
+int test = 0;
+
+void setup(){
+  Serial.begin(9600); // open the serial port
+
+  pinMode(GREEN, OUTPUT); // green LED relay is an output
+  pinMode(RED, OUTPUT); // red LED relay is an output
+
+
+  // Note: Analogue pins are automatically set as inputs
+
+}
+
+
+
+
+void loop(){
+
+
+
+  //getting the readings from Serial
+  //needs to be ==5 (not >0) because it loops so fast that the next byte after L hasn't arrived
+  //by the time it tries to read it. Finds nothing in the buffer and returns -1.
+  if (Serial.available() == 5) {
+
+
+    pointer = 0;
+
+    // read the incoming byte
+    inByte = Serial.read();
+
+    //Serial.println(inByte, DEC);
+
+    // If the marker (L) is found, next 4 characters are the reading
+    if (inByte=='G' || inByte=='R') {
+
+
+      while (pointer < 4) { // accumulate 4 chars
+        buffer[pointer] = Serial.read(); // store in the buffer
+
+        //        Serial.println(buffer[pointer], DEC);
+
+        pointer++; // move the pointer forward by 1
+
+      }
+
+      int thousands = buffer[0] - '0';
+      int hundreds = buffer[1] - '0';  
+      int tens = buffer[2] - '0';
+      int ones = buffer[3] - '0';
+
+      reading = thousands*1000 + hundreds*100 + tens*10 + ones; //create single reading
+
+      if (reading > 4000) {
+        reading = 4000;
+      };
+
+      reading = (4000 - reading) / 4;  //reverse the reading so high electricity reading
+      // is small delay for the LEDs.
+      // and divide by 4 to make delay smaller.
+
+      //      test = buffer[0];
+      //      Serial.print(test);
+
+      //pointer = 0;
+
+      //while (pointer < 4) { // accumulate 4 chars
+      //buffer[pointer] = buffer[pointer] - '0'; // store in the buffer and convert to int from char        
+      //pointer++; // move the pointer forward by 1
+
+      //}
+
+      //      test = buffer[0];
+      //      Serial.print(test);
+
+      //reading = (buffer[0] * 1000) + (buffer[1] * 100) + (buffer[2] * 10) + (buffer[3]);
+
+      Serial.println(reading);
+
+      //      if (inByte == 'G') {
+      //
+      //        // construct the 4 digits into a single 4-digit reading for GREEN
+      //        G_reading = reading;
+      //
+      //        //   Serial.println(G_reading);
+      //
+      //      }
+      //
+      //      else {
+      //
+      //        // construct the 4-digit reading for RED
+      //        R_reading = reading;
+      //        
+      //     //   Serial.println(R_reading);
+      //
+      //      }
+      //
+
+    }
+
+
+  }
+
+  // Sending the readings to Arduino
+  if ((millis() - time) >= reading) {
+
+    if (state == 0) {
+      digitalWrite(12, HIGH); //turn the LED relay on
+      digitalWrite(13, LOW); //turn the LED relay off
+    }
+    else {
+      digitalWrite(12, LOW); // turn the LED relay off
+      digitalWrite(13, HIGH); // turn the LED relay on
+    }
+
+    state = 1 - state;    
+
+    time = millis();
+
+  }
+
+}
+
+
+
+

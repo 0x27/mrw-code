@@ -1,0 +1,9 @@
+# Workaround for a bug in Maverick...
+# (requires that this script be run with sudo)
+modprobe -r pl2303
+modprobe pl2303
+
+stty speed 57600 < /dev/ttyUSBRFM
+stty -echo < /dev/ttyUSBRFM
+stty raw < /dev/ttyUSBRFM
+

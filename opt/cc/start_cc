@@ -1,0 +1,6 @@
+modprobe -r pl2303
+modprobe pl2303
+date >> /tmp/cc.log
+echo "Current cost app started" >> /tmp/cc.log
+perl -I /home/mwhitehead/opt/cc /home/mwhitehead/opt/cc/currentcost.pl >> /dev/null 2>>/tmp/cc.log &
+
