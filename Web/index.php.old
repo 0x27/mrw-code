@@ -1,0 +1,558 @@
+<!DOCTYPE html>
+
+ <html lang="en" style="height: auto; height: 95%; min-height: 95%>
+ <head>
+   <title>Matthew's House</title>
+   <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+   <!--<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.3/jquery.min.js" type="text/javascript"></script>-->
+   <link type="text/css" href="css/redmond/jquery-ui-1.7.2.custom.css" rel="stylesheet" />	
+   <script src="js/jquery-1.3.2.min.js" type="text/javascript"></script>
+   <script src="js/jquery-ui-1.7.2.custom.min.js" type="text/javascript"></script>
+
+   <script type="text/javascript">
+   
+     setInterval ( "loadmusiclist()", 5000 );
+     
+     function addEntireAlbum(artist, album)
+     {
+        var address = '/music/add/?artistname=' + artist + '&albumname=' + album;
+        
+        $.get(address, function(d){play();});
+        $("#albumsdialog").dialog('close');
+     }
+     
+     function replaceEntireAlbum(artist, album)
+     {
+        var address = '/music/add/?artistname=' + artist + '&albumname=' + album;
+        
+        clear();        
+        $.get(address, function(d){play();});
+        $("#albumsdialog").dialog('close');
+     }
+     
+     function crop()
+     {
+        $.get("music/crop/");
+     }
+     
+     function clear()
+     {
+        $.get("music/clear/");
+     }
+     
+     function flashStopButton()
+     {
+        $('#stopbutton').attr({'src': 'icons/music/ButtonStopSet.png'});
+        setTimeout('resetButtons()', 600);
+     }
+     
+     function flashBackButton()
+     {
+        $('#backbutton').attr({'src': 'icons/music/ButtonFirstSet.png'});
+        setTimeout('resetButtons()', 600);
+     }
+     
+     function flashForwardButton()
+     {
+        $('#forwardbutton').attr({'src': 'icons/music/ButtonLastSet.png'});
+        setTimeout('resetButtons()', 600);
+     }
+     
+     function resetButtons()
+     {
+        $('#backbutton').attr({'src': 'icons/music/ButtonFirst.png'});
+        $('#forwardbutton').attr({'src': 'icons/music/ButtonLast.png'});
+        $('#stopbutton').attr({'src': 'icons/music/ButtonStop.png'});
+     }
+     
+     function updateButtons()
+     {
+       if (paused)
+       {
+          $('#pausebutton').attr({'src': 'icons/music/ButtonPauseSet.png'});
+          $('#playbutton').attr({'src': 'icons/music/ButtonPlay.png'});
+       }
+       else if (playing)
+       {
+          $('#pausebutton').attr({'src': 'icons/music/ButtonPause.png'});
+          $('#playbutton').attr({'src': 'icons/music/ButtonPlaySet.png'});
+       }
+       else
+       {
+          $('#pausebutton').attr({'src': 'icons/music/ButtonPause.png'});
+          $('#playbutton').attr({'src': 'icons/music/ButtonPlay.png'});
+       }
+     }
+   
+     function forward()
+     {
+        $.get("music/forward/");
+        loadmusiclist();
+     }
+     
+     function back()
+     {
+        $.get("music/back/");
+        loadmusiclist();
+     }
+     
+     function play()
+     {
+        $.get("music/play/");
+        loadmusiclist();
+     }
+     
+     function stop()
+     {
+        $.get("music/stop/");
+        loadmusiclist();
+     }
+     
+     function mute()
+     {
+        $.get("music/mute/");
+        loadmusiclist();
+     }
+     
+     function unmute()
+     {
+        $.get("music/unmute/");
+        loadmusiclist();
+     }
+     
+     function pause()
+     {
+        $.get("music/pause/");
+     }
+     
+     var currentlyPlayingTrack = "-1";
+     
+     var playing = false;
+     var paused = false;
+ 
+     $(document).ready(function(){
+
+        // Tabs
+        $('#tabs').tabs();
+        $('#tabs').tabs('select', 0);
+        
+        // Accordion
+	$("#music").accordion({
+			collapsible: true,active: false
+		});
+
+        // Progressbar
+	$("#progressbarenergy").progressbar({
+           value: 0 
+        });
+        
+        // Progressbar
+	$("#progressbartemp").progressbar({
+           value: 0 
+        });
+
+        // Progressbar
+	$("#load1progress").progressbar({
+           value: 0
+        });
+	$("#load5progress").progressbar({
+           value: 0
+        });
+	$("#load15progress").progressbar({
+           value: 0
+        });
+        
+            //$(".column").sortable({
+		//	connectWith: '.column'
+	//	});
+
+		
+
+	//	$(".column").disableSelection();      
+        
+
+        $("#playlistsortable").disableSelection();
+        $("#playlistsortable").sortable({
+			cancel: '.ui-state-disabled'
+		});
+ 
+$("#albumsdialog").dialog({
+			bgiframe: true,
+			autoOpen: false,
+			height: 500,
+                        width: 500,
+			modal: true,
+			buttons: {
+				Cancel: function() {
+					$(this).dialog('close');
+				}
+			},
+			close: function() {
+			}
+		});
+
+       $("a").addClass("test");
+       $('#jlink').click(function(event){
+         event.preventDefault();
+         $(this).hide("slow");
+       });
+       
+       $("#slider-vertical").slider({
+			orientation: "vertical",
+			range: "min",
+			min: 0,
+			max: 100,
+			value: 0,
+			slide: function(event, ui) {
+				$("#amount").val(ui.value);
+				$.get("music/volume/?volumeamount=" + ui.value);
+			}
+		});
+		$("#amount").val($("#slider-vertical").slider("value"));
+		
+		$("#timeslider").slider({
+			value: 0,
+			slide: function(event, ui) {
+				$("#timeamount").val(ui.value);
+				$.get("music/seek/?timepercent=" + ui.value);
+			}
+		});
+       
+       loadmusiclist();
+       
+       loadhousedata();
+       
+       loadartists();
+
+       loadpower();
+
+       loadtemp();
+       
+     });
+
+     function loadpower()
+     {
+        // Change e.g. 0.28 kw into a percentage of 3000 watts
+
+        $.get('/power', function(d){
+          $('#progressbarenergy').progressbar('option', 'value', ((d * 1000) / 3000 * 100));
+          $('#energyamountlabel').html(d * 1000);
+       }, "text");
+     }
+
+     function loadtemp()
+     {
+        $.get('/temp', function(d){
+          $('#progressbartemp').progressbar('option', 'value', (d / 50 * 100));
+          $('#tempamountlabel').html(d);
+       }, "text");
+     }
+     
+     function loadhousedata()
+     {
+        $.get('/house', function(d){
+          //$('#statustest').html(d);
+          var currentTagTokens = d.split( " " );
+
+          // Uptime returns slightly different things depending on the time of day(!!!) so offset with this
+          var offset = 0;
+          if (currentTagTokens.length == 16)
+          {
+             offset = 1;
+          }
+
+          var load1=currentTagTokens[12 + offset].substring(0, currentTagTokens[12 + offset].length - 1);
+          var load5=currentTagTokens[13 + offset].substring(0, currentTagTokens[13 + offset].length - 1);
+          var load15=currentTagTokens[14 + offset];
+
+          $('#statussystemtime').html('System time: ' + currentTagTokens[1]);
+          $('#statusuptime').html('Uptime: ' + currentTagTokens[3] + ' ' + currentTagTokens[4].substring(0, currentTagTokens[4].length - 1));
+          $('#statususers').html('Users: ' + currentTagTokens[7 + offset]);
+          $('#load1progress').progressbar('option', 'value', (load1 / 5) * 100); 
+          $('#load5progress').progressbar('option', 'value', (load5 / 5) * 100); 
+          $('#load15progress').progressbar('option', 'value', (load15 / 5) * 100);
+          $('#load1text').html(load1);
+          $('#load5text').html(load5);
+          $('#load15text').html(load15);
+
+       }, "text");
+     }
+     
+     function loadartists()
+     {
+        $.get('/music/artists', function(d){
+          //$('#musicartists').html("");
+          
+          var i = 0;
+          var artist = "";
+          
+          $(d).find('item').each(function(){  
+   
+                var $book = $(this);     
+                artist = $book.find('artist').text();  
+
+                var nextPortlet = '<div id="portlet" class="portlet">';
+                nextPortlet = nextPortlet + '<div class="portlet-header" artistname="' + artist + '">' + artist + '</div>';
+                nextPortlet = nextPortlet + '<div class="portlet-content">something about ' + artist + ' </div>';
+                nextPortlet = nextPortlet + '</div>';
+                $('#musicartistscolumn' + i).append($(nextPortlet));
+                i = i + 1;	
+                i = i % 4;	
+           });
+           
+           $(".portlet").addClass("ui-widget ui-widget-content ui-helper-clearfix ui-corner-all");
+			$(".portlet-header")
+				.addClass("ui-widget-header ui-corner-all")
+				.prepend('<span class="ui-icon ui-icon-plusthick"></span>');
+	        $(".portlet-content").hide();
+
+		    $(".portlet-header").click(function() {
+			   $(this).toggleClass("ui-icon-minusthick");
+			   //$(this).parents(".portlet:first").find(".portlet-content").toggle();
+			   loadartistalbums($(this).attr("artistname"));
+		   });
+       });
+     }
+     
+     function loadartistalbums(artist)
+     {        
+        var address = '/music/artists/?name=' + jQuery.trim(artist);
+     
+        $.get(address, function(d){
+          
+          var i = 0;
+          var html = '<div>';
+          
+          $(d).find('item').each(function(){
+                var $book = $(this);     
+                var album = $book.find('album').text(); 
+                album = jQuery.trim(album);
+                artist = jQuery.trim(artist);
+                html = html + '<div id="albumportlet" class="portlet">';
+                html = html + '<div class="albumportlet-header" albumname="' + album + '">' + album + '</div>';
+                //html = html + '<div class="albumportlet-content">';
+                html = html + '<ol class="selectabletracks">';
+                html = html + '<li class="ui-widget-content addalbum-button" albumname="' + album + '" artistname="' + artist + '">Add All</li>';
+                html = html + '<li class="ui-widget-content replacealbum-button" albumname="' + album + '" artistname="' + artist + '">Replace All</li>';
+                html = html + '</ol>';
+                //html = html + '</div>';
+                html = html + '</div>';
+           });
+           
+           html = html + '</div>';
+           
+           $('#albumsdialog').html(html);
+           $('#albumsdialog').attr({'title': 'Crap'});
+           
+           $(".albumportlet").addClass("ui-widget ui-widget-content ui-helper-clearfix ui-corner-all");
+			$(".albumportlet-header")
+				.addClass("ui-widget-header ui-corner-all")
+				.prepend('<span class="ui-icon ui-icon-plusthick"></span>');
+	        $(".selectabletracks").hide();
+	        
+	        $(".albumportlet-header").click(function() {
+			   $(this).toggleClass("ui-icon-minusthick");
+			   $(this).next().toggle();
+		   });
+		   
+		   $(".addalbum-button").click(function() {
+		      //alert("Adding album " + $(this).attr("albumname") + " by " + $(this).attr("artistname"));
+		      addEntireAlbum($(this).attr("artistname"), $(this).attr("albumname"));
+		   });
+		   
+		   $(".replacealbum-button").click(function() {
+		      replaceEntireAlbum($(this).attr("artistname"), $(this).attr("albumname"));
+		   });
+		   
+		   $(".selectabletracks").selectable();
+	        
+           $('#albumsdialog').dialog('open');  
+       });
+       
+       return;
+     }
+     
+     function loadmusiclist(){ 
+       currentlyPlayingTrack = 0;
+       $.get('/music/playing', function(d){
+       
+          // Reset values - these will be overwritten when we get data back from the server
+          //$('#playbutton').attr({'src': 'icons/music/ButtonPlay.png'});
+          
+          paused = false;
+          playing = false;
+          
+          $(d).find('state').each(function(){
+             
+             if ($(this).text() == "playing")
+             {
+                playing = true;
+                paused = false;
+             }
+             else if ($(this).text() == "paused")
+             {
+                playing = true;
+                paused = true;
+             }
+          });
+          
+          $(d).find('position').each(function(){
+             currentlyPlayingTrack = $(this).text();
+             
+             // Something is playing - therefore we can set the Play button to be set
+             //$('#playbutton').attr({'src': 'icons/music/ButtonPlaySet.png'});
+          });
+          
+          $(d).find('volume').each(function(){
+             $("#amount").val($(this).text());
+             $("#slider-vertical").slider('option', 'value', $(this).text());
+          });
+          
+          $(d).find('timepercent').each(function(){
+             $("#timeamount").val($(this).text());
+             $("#timeslider").slider('option', 'value', $(this).text());
+          });
+
+          $.get('/music', function(d){  
+          
+             $('#playlistsortable').html("");
+   
+             $(d).find('item').each(function(){  
+   
+                var $book = $(this);   
+                var title = $book.find("track").text();  
+                var artist = $book.find('artist').text();  
+                var pos = $book.find('position').text();
+
+                if (jQuery.trim(pos) == jQuery.trim(currentlyPlayingTrack))
+                {
+                   var nextli = '<li class="ui-state-highlight ui-state-disabled"><span class="ui-icon ui-icon-arrowthick-2-n-s"></span>' + pos + '. ' + artist + ' - ' + title + '</li>';
+                   $('#playlistsortable').append($(nextli));
+                }
+                else
+                {
+                   var nextli = '<li class="ui-state-default"><span class="ui-icon ui-icon-arrowthick-2-n-s"></span>' + pos + '. ' + artist + ' - ' + title + '</li>';
+                   $('#playlistsortable').append($(nextli));
+                }
+             });
+          });
+          
+          updateButtons();
+ 
+          loadpower();
+
+          loadtemp();
+
+          loadhousedata();
+       });
+    }
+
+   </script>
+   <style type="text/css">
+    a.test { font-weight: bold; }
+    img { padding: 5px; padding-top: 12px; }
+    #playlistsortable { list-style-type: none; margin: 0; padding: 0; width: 40%; }
+    #playlistsortable li { margin: 0 3px 3px 3px; padding: 0.4em; padding-left: 1.5em; font-size: 0.8em; height: 16px; }
+    #playlistsortable li span { position: absolute; margin-left: -1.3em; }
+    #musicartists { list-style-type: none; margin: 0; padding: 15px; height: 300%}
+    #musicartists li { margin: 0 3px 3px 3px; padding: 0.4em; padding-left: 1.5em; font-size: 0.8em; height: 16px; }
+    #musicartists li span { position: absolute; margin-left: -1.3em; }
+    div{ font-size: 1.0em; margin: 10px 0px 0px 0px }
+    div.thin-progress-bar { height: 16px; width: 50%; padding: 0em; margin-left: 10px;}
+    div.medium-progress-bar { height: 20px; width: 80%; padding: 0em; margin-left: 0px;}
+    #playcontrols {height: 150px; width: 150px; border: 1} 
+    #playcontrols h3 { text-align: center; margin: 0; }
+    #musicbrowser {height: 300px; width: 150px; border: 1} 
+    #musicbrowser h3 { text-align: center; margin: 0; }
+    .column { width: 170px; float: left; padding-bottom: 100px; }
+	.portlet { margin: 0 1em 1em 0; }
+	.portlet-header { margin: 0.3em; padding-bottom: 4px; padding-left: 0.2em; }
+	.portlet-header .ui-icon { float: right; }
+	.portlet-content { padding: 0.4em; }
+	#albumsdialog {height: 75%; margin: 0 1em 1em 0; }
+	.selectabletracks .ui-selecting { background: #FECA40; }
+	.selectabletracks .ui-selected { background: #F39814; color: white; }
+	.selectabletracks { list-style-type: none; margin: 0; padding: 0; width: 30%; }
+	.selectabletracks li { margin: 3px; padding: 0.4em; font-size: 1.0em; height: 12px; }
+
+   </style>
+ </head>
+ <body style="height: auto; height: 100%; min-height: 100%">
+
+   <div id="tabs" style="height: 100%">
+			<ul>
+				<li><a href="#tabs-1">Music</a></li>
+				<li><a href="#tabs-2">Energy</a></li>
+                <li><a href="#tabs-3">Status</a></li>
+			</ul>
+			<div id="tabs-1" style="position: relative; height: 100%">
+                           <ul id="playlistsortable" style="position: relative; float: left"></ul>
+                           <div id="playcontrols" class="ui-widget-content" style="position: relative ; float: right; width: 58%">
+                              <h3 class="ui-widget-header">Play Controls</h3>
+                              <a href="#" onclick="javascript:play();return false;"><img id="playbutton" src="icons/music/ButtonPlay.png" width="50" border="0" style="padding-left: 12px;"/></a>
+                              <a href="#" onclick="javascript:stop();return false;"><img id="stopbutton" onclick="javascript:flashStopButton();return false;" src="icons/music/ButtonStop.png" width="50" border="0"/></a>
+                              <a href="#" onclick="javascript:pause();return false;"><img id="pausebutton" src="icons/music/ButtonPause.png" width="50" border="0"/></a>
+                              <a href="#" onclick="javascript:back();return false;"><img id="backbutton" onclick="javascript:flashBackButton();return false;" src="icons/music/ButtonFirst.png" width="50" border="0"/></a>
+                              <a href="#" onclick="javascript:forward();return false;"><img id="forwardbutton" onclick="javascript:flashForwardButton();return false;" src="icons/music/ButtonLast.png" width="50" border="0"/></a>
+                              <!--<a href="#" onclick="javascript:mute();return false;"><img src="icons/music/ButtonCancel.png" width="50" border="0"/></a>
+                              <a href="#" onclick="javascript:unmute();return false;"><img src="icons/music/ButtonAdd.png" width="50" border="0"/></a>-->
+                              
+                                <input type="hidden" id="amount" style="border:0; color:#f6931f; font-weight:bold" />
+
+                                <div id="slider-vertical" style="height:90px; position: relative; float: right; left: -25px; "></div>
+                                
+                                <input type="hidden" id="timeamount" style="border:0; color:#f6931f; font-weight:bold" />
+                                
+                                <div id="timeslider" style="width:275px; left: 35px; top: 5px;"></div>
+
+                           </div>
+                           <div id="musicbrowser" class="ui-widget-content" style="position: relative; float: right; width: 58%; height: auto">
+                              <h3 class="ui-widget-header">Music Collection</h3>
+                              <div id="music" style="height: auto">
+                                 <h3><a href="#">Artists</a></h3>
+                                 <div id="musicartists">
+                                    <div id="musicartistscolumn0" class="column">
+                                    </div>
+                                    
+                                    <div id="musicartistscolumn1" class="column">
+                                    </div>
+                                    
+                                    <div id="musicartistscolumn2" class="column">
+                                    </div>
+                                    
+                                    <div id="musicartistscolumn3" class="column">
+                                    </div>
+
+                                 </div>
+                                 <!--<h3><a href="#">Albums</a></h3>
+                                 <div id="musicalbums">hi</div>-->
+                              </div>
+                           </div>
+                        </div>
+			<div id="tabs-2">
+                          <div><span>Energy Usage</span><span> - </span><span id="energyamountlabel">0</span><span> watts</span></div>
+                          <div class="medium-progress-bar" id="progressbarenergy"></div>
+                          <div><span>Temperature</span><span> - </span><span id="tempamountlabel">0</span><span> degrees</span></div>
+                          <div class="medium-progress-bar" id="progressbartemp"></div>
+                        </div>
+                        <div id="tabs-3">
+                           <div id="statussystemtime" name="statussystemtime">System time: </div>
+                           <div id="statusuptime" name="statusuptime">Uptime: </div>
+                           <div id="statususers" name="statususers">Users: </div>
+                           <div id="statusload1" name="statusload1">Load (1 minute): <span id="load1text"></span> 
+                              <div class="thin-progress-bar" id="load1progress" name="load1progress"></div>
+                           </div>
+                           <div id="statusload5" name="statusload5">Load (5 minute): <span id="load5text"></span> 
+                              <div class="thin-progress-bar" id="load5progress" name="load5progress"></div>
+                           </div>
+                           <div id="statusload15" name="statusload15">Load (15 minute): <span id="load15text"></span> 
+                              <div class="thin-progress-bar" id="load15progress" name="load15progress"></div>
+                           </div>
+                        </div>
+		</div>
+
+<div id="albumsdialog" title="Albums">
+</div>
+
+ </body>
+ </html> 
