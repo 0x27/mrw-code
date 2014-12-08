@@ -75,10 +75,14 @@ prog_char httpResponseString16[] PROGMEM = "\" maxlength=\"2\" size=\"8\"/><p></
 prog_char httpResponseString17[] PROGMEM = "<label for=\"data\">Some other data</label>";
 prog_char httpResponseString18[] PROGMEM = "<input type=\"text\" name=\"data\" id=\"data\" maxlength=\"10\" size=\"10\"/><p></p>";
 prog_char httpResponseString19[] PROGMEM = "<hr align=\"left\" width=\"300\"><p></p>";
-prog_char httpResponseString20[] PROGMEM = "<input type=\"submit\" value=\"Save\"/>";
-prog_char httpResponseString21[] PROGMEM = "</form>";
-prog_char httpResponseString22[] PROGMEM = "</body>";
-prog_char httpResponseString23[] PROGMEM = "</html>";
+prog_char httpResponseString20[] PROGMEM = "<label for=\"url1\">HTTP data source</label>";
+prog_char httpResponseString21[] PROGMEM = "<input type=\"text\" name=\"url1\" id=\"url1\" value=\"";
+prog_char httpResponseString22[] PROGMEM = "\" maxlength=\"100\" size=\"40\"/><p></p>";
+prog_char httpResponseString23[] PROGMEM = "<hr align=\"left\" width=\"300\"><p></p>";
+prog_char httpResponseString24[] PROGMEM = "<input type=\"submit\" value=\"Save\"/>";
+prog_char httpResponseString25[] PROGMEM = "</form>";
+prog_char httpResponseString26[] PROGMEM = "</body>";
+prog_char httpResponseString27[] PROGMEM = "</html>";
 PROGMEM const char *httpResponseStrings[] =
 {   
   httpResponseString01,httpResponseString02,httpResponseString03,
@@ -88,7 +92,8 @@ PROGMEM const char *httpResponseStrings[] =
   httpResponseString13,httpResponseString14,httpResponseString15,
   httpResponseString16,httpResponseString17,httpResponseString18,
   httpResponseString19,httpResponseString20,httpResponseString21,
-  httpResponseString22,httpResponseString23
+  httpResponseString22,httpResponseString23,httpResponseString24,
+  httpResponseString25,httpResponseString26,httpResponseString27
 };
 
 // Error strings for sending to a connected browser
@@ -101,12 +106,15 @@ PROGMEM const char *httpErrorStrings[] =
 };
   
 byte numberOfMessages = 0;
-byte messageCursor = 0;
+byte messageCursor = 1;
+byte messageReadCursor = 1;
 char messages[6][63];
 byte serialRXComplete = 1; // RX complete
 byte serialRXCursor = 0;
 byte backlightOn = 0;
 long timeSinceLastLiveConnAttempt = 0;
+long timeSinceLastHTTPDataCheck = 0;
+byte httpDataCheckCount = 0;
 
 /* Structure defining the function a menu item calls */
 struct menuItem {
@@ -146,6 +154,32 @@ EthernetClient client;
 EthernetServer server(80);
 
 long timeSinceBacklightOn = 0;
+
+/**
+ * Decode a URL encoded string into characteres
+ */
+void urlDecode(char *dst, char *src)
+{
+  char a, b;
+  while (*src) {
+    if ((*src == '%') &&
+       ((a = src[1]) && (b = src[2])) &&
+       (isxdigit(a) && isxdigit(b))) {
+         
+         if (a >= 'a') a -= 'a'-'A';
+         if (a >= 'A') a -= ('A' - 10);
+         else a -= '0';
+         if (b >= 'a') b -= 'a'-'A';
+         if (b >= 'A') b -= ('A' - 10);
+         else b -= '0';
+         *dst++ = 16*a+b;
+         src+=3;
+    } else {
+      *dst++ = *src++;
+    }
+  }
+  *dst++ = '\0';
+} 
 
 // Increment the cursor. The cursor goes from 0 to N, but the
 // cursor has 1 added to it when accessing the menu text array
@@ -224,6 +258,88 @@ void printNetworkSettings() {
   }
 }
 
+/*
+ * Print the IP address wherever the LCD cursor is
+ */
+void printIPAddress() {
+  lcd.print("IP: ");
+  byte dots = 0;
+  for (byte thisByte = 0; thisByte < 4; thisByte++) {
+    // print the value of each byte of the IP address:
+    lcd.print(Ethernet.localIP()[thisByte]);
+    
+    if (dots < 3) {
+      lcd.print(".");
+      dots++;
+    }
+  }
+}
+
+/**
+ * Check for data at the HTTP URL specified by the user
+ */
+void checkForHTTPData() {
+  
+  if (timeSinceLastHTTPDataCheck == 0) timeSinceLastHTTPDataCheck = millis();
+  
+  if ((millis() - timeSinceLastHTTPDataCheck) > 20000) {
+    long timeSinceLastHTTPDataCheck = millis();
+    
+    // Buffer for reading strings from flash memory
+    // and reading data from the specified URL
+    char tempBuffer[100];
+    
+    client.flush();
+    
+    if (client.connected()) {
+      while (client.available()) {
+        client.read();
+      }
+    }
+    
+    client.stop();
+    
+    int connected = client.connect(tempBuffer, 80); // value of url1 property
+    
+    if (connected) {
+      httpDataCheckCount++;
+      Serial.print("HTTP data count: " );
+      Serial.println(httpDataCheckCount);
+      if (httpDataCheckCount == 255) httpDataCheckCount = 0;
+      strcpy_P(tempBuffer, (char*)pgm_read_word(&(httpStrings[0])));
+      client.println(tempBuffer);  // GET / HTTP/1.1
+      
+      tempBuffer[0] = '\0';
+      readProperty("url1", tempBuffer); // Copy the url1 property so we know which URL to connect to
+      urlDecode(tempBuffer, tempBuffer);
+      client.println(tempBuffer);  //  Host: read from url1 property
+      
+      strcpy_P(tempBuffer, (char*)pgm_read_word(&(httpStrings[2])));
+      client.println(tempBuffer); //  Connection: close
+      client.println();
+      
+      int i = 0;
+      
+      while (i < 1) {
+        while (client.available()) {
+          tempBuffer[i] = client.read();
+          i++;
+          
+          if (i == 100) i = 0;
+        }
+      }
+    } else {
+      Serial.print("HTTP data count: " );
+      Serial.println(httpDataCheckCount);
+    }
+    
+    client.stop();
+  }
+}
+
+/**
+ * Ping a server to check the network connection is OK
+ */
 void pingServer() {
   
   // Buffer for reading strings from flash memory
@@ -325,6 +441,7 @@ void okButtonPressed() {
  
  */
 void cancelButtonPressed() {
+  Serial.println("Cancel");
   commonButtonFunctions();
   
   if (currentMenu == 0) {
@@ -364,7 +481,7 @@ void rightButtonPressed() {
     showCurrentMenu();
   } else {
     // We're in the messages view
-    if (messageCursor < (numberOfMessages - 1)) {
+    if (messageCursor < (numberOfMessages)) {
       messageCursor++;
       showMessages();
     }
@@ -382,7 +499,7 @@ void leftButtonPressed() {
     showCurrentMenu();
   } else {
     // We're in the messages view
-    if (messageCursor > 0) {
+    if (messageCursor > 1) {
       messageCursor--;
       showMessages();
     }
@@ -391,6 +508,9 @@ void leftButtonPressed() {
 
 void (*buttonFunctions[4]) ();
 
+/*
+ * On the home screen, display whether or not we have a network connection at the moment
+ */
 void showConnectionState() {
   lcd.setCursor(16, 0);
   lcd.print("[");
@@ -421,6 +541,9 @@ void showConnectionState() {
   }
 }
 
+/*
+ * Display the message at the current cursor on screen
+ */
 void showMessages() {
   char messageTitle[21];
   messageTitle[20] = '\0';
@@ -431,7 +554,7 @@ void showMessages() {
   lcd.clear();
   lcd.setCursor(0, 0);
   
-  sprintf(messageTitle, "Msgs (%d/%d)", messageCursor + 1, numberOfMessages);
+  sprintf(messageTitle, "Msgs (%d/%d)", messageCursor, numberOfMessages);
   lcd.print(messageTitle);
   
   if (numberOfMessages > 0) {
@@ -441,47 +564,138 @@ void showMessages() {
   showConnectionState();
 }
 
+/*
+ * Display the text of the message on screen, starting on the second line.
+ */
 void printText(char *message) {
   char nextLine[21];
   nextLine[20] = '\0';
   byte messageLength = strlen(message);
   
+  Serial.println("Printing text...");
+  Serial.println(message);
+  char* startOfMessage = ((hasMessageID(message) > 0) && (hasMessageID(message) < 10)) ? message + 3 : message;
+  Serial.println(startOfMessage);
+  Serial.println("Done");
+  
   // First line
-  strncpy(nextLine, message, 20);
+  strncpy(nextLine, startOfMessage, 20);
   lcd.setCursor(0, 1);
   lcd.print(nextLine);
   
   // Second line
   if (messageLength > 20) {
-    strncpy(nextLine, message + 20, 20);
+    strncpy(nextLine, startOfMessage + 20, 20);
     lcd.setCursor(0, 2);
     lcd.print(nextLine);
   }
   
   // Third line
   if (messageLength > 40) {
-    strncpy(nextLine, message + 40, 20);
+    strncpy(nextLine, startOfMessage + 40, 20);
     lcd.setCursor(0, 3);
     lcd.print(nextLine);
   }
 }
 
 /*
- * See if there is any data available to read
- * from serial (USB) in. If there is, read it
- * and process it accordingly.
+ * Find the message in the messages array that has the specified message ID.
+ * Returns a value between 1 and 5 if the message ID is found, otherwise 0
+ */
+byte findMessageWithID(byte msgID) {
+  for (byte i = 1; i < 6; i++) {
+    char id[2] = {messages[i][1], '\0'};
+    if (((char)messages[i][0]) == '[' && 
+          atoi(id) == msgID &&
+          ((char)messages[i][2]) == ']') {
+        return i;
+      }
+  }
+  
+  return 0;
+}
+
+/*
+ * Check if a message starts with "[n]..." and hence
+ * has a message ID = n. Returns the message ID if there 
+ * is one, otherwise 0;
+ */
+byte hasMessageID(char* message) {
+  Serial.println(message);
+  char id[2] = {message[1], '\0'};
+  if (message[0] == '[' && 
+      atoi(id) > 0 &&
+      atoi(id) <= 9 &&
+      message[2] == ']') {
+        Serial.println("Has message ID");
+    return atoi(id);
+  }
+  Serial.println("No message ID");
+  
+  return 0;
+}
+
+/*
+ * See if there is any data available to read from serial (USB) in. 
+ * If there is, read it and process it accordingly.
+ *
+ * We always read into the first entry in the array which is reserved as
+ * a buffer for reading from serial. Once a complete message has been read
+ * into the buffer its copied to the next available slot in the message
+ * array (i.e. messages[1] onwards)
  */
 void checkForSerialData() {
+  
+  // We need to know if the message has a message ID so we know
+  // where to reset the cursor to when we get to > 60 bytes read (
+  // the maximum number of bytes allowed in a message)
+  byte hasMsgID = 0;
+  
+  // We could be coming back into this method half-way through reading a message,
+  // so check if its a message with a MSG ID.
+  if (serialRXCursor >= 2) {
+      // We've received 3 bytes - see if they are [n] where n is an integer
+      hasMsgID = hasMessageID(messages[0]);
+  }
+  
   while (Serial.available()) {
-    messages[numberOfMessages][serialRXCursor] = Serial.read();
+    messages[0][serialRXCursor] = Serial.read();
     serialRXComplete = 0; // Not complete yet
     
-    if (messages[numberOfMessages][serialRXCursor] == ':') {
+    // If we get to the 3rd char in the message, see if it has a MSG ID.
+    if (serialRXCursor == 2) {
+      // We've received 3 bytes - see if they are [n] where n is an integer
+      hasMsgID = hasMessageID(messages[0]);
+      Serial.println(hasMsgID);
+    }
+    
+    if (messages[0][serialRXCursor] == ':') {
       // Message complete
-      messages[numberOfMessages][serialRXCursor] = '\0';
+      messages[0][serialRXCursor] = '\0';
       serialRXComplete = 1;
       serialRXCursor = 0;
-      numberOfMessages++;
+      
+      byte arrayIndexToWriteNewMessage = 0;
+      
+      // Which slot should we write this message into?
+      if (hasMsgID) {
+        // If we have a message with the same message ID, replace that one
+        arrayIndexToWriteNewMessage = findMessageWithID(hasMsgID);
+        Serial.print("Array index: ");
+        Serial.println(arrayIndexToWriteNewMessage);
+      } 
+      
+      // If we haven't got a specific slot to to write the message, put it in the next free slot
+      if (arrayIndexToWriteNewMessage == 0) {
+        arrayIndexToWriteNewMessage = messageReadCursor;
+        messageReadCursor++;
+        if (messageReadCursor > 5) messageReadCursor = 1;
+        if (numberOfMessages < 5) numberOfMessages++;
+      }
+      
+      // Copy from the buffer into the next available slot
+      memcpy(messages[arrayIndexToWriteNewMessage], messages[0], 63);
+      
       showMessages();
       break;
     } else {
@@ -490,7 +704,12 @@ void checkForSerialData() {
       // we hit a colon.
       serialRXCursor++;
       if (serialRXCursor == 60) {
-        serialRXCursor = 0;
+        
+        if (hasMsgID) {
+          serialRXCursor = 0;
+        } else {
+          serialRXCursor = 3;
+        }
       }
     }
   }
@@ -816,7 +1035,7 @@ void checkForHTTPConnections() {
           serverClient.println(buffer);
         } else {
           // No form data received on this connection so must be a request for the HTML form
-          for (int i = 4; i < 20; i++) {
+          for (int i = 4; i < 27; i++) {
             strcpy_P(buffer, (char*)pgm_read_word(&(httpResponseStrings[i])));  // Copy each line of HTML text out of flash strings
             serverClient.println(buffer);
           
@@ -831,6 +1050,14 @@ void checkForHTTPConnections() {
             if (i == 14) {
               buffer[0] = '\0';
               readProperty("blttimer", buffer); // Copy the blttimer property into the HTML response
+              serverClient.println(buffer);
+            }
+            
+            // Special case where we insert the value of the url1 property
+            if (i == 20) {
+              buffer[0] = '\0';
+              readProperty("url1", buffer); // Copy the url1 property into the HTML response
+              urlDecode(buffer, buffer);
               serverClient.println(buffer);
             }
           }
@@ -858,7 +1085,7 @@ void checkForHTTPConnections() {
  * Standard arduino startup routine
  */
 void setup() {
-  byte mac[] = {0x00, 0xAA, 0xBB, 0xCC, 0xDE, 0x02 };
+  byte mac[] = {0x00, 0xF2, 0x3D, 0x7F, 0xDE, 0x02 };
   
   buttonFunctions[0] = okButtonPressed;
   buttonFunctions[1] = cancelButtonPressed;
@@ -884,11 +1111,10 @@ void setup() {
   messages[0][0] = messages[1][0] = messages[2][0] = messages[3][0] = messages[4][0] = messages[5][0] = '\0';
   
   // Sample messages
-  sprintf(messages[0], "Here's sample message number one");
-  sprintf(messages[1], "And here's another message to display");
-  sprintf(messages[2], "Message number three is slightly different, but not much");
-  sprintf(messages[3], "Four four message four here's four message four");
-  numberOfMessages = 4;
+  sprintf(messages[1], "Here's sample message number one");
+  sprintf(messages[2], "And here's another message to display");
+  numberOfMessages = 2;
+  messageReadCursor = 3;
   
   pinMode(BACKLIGHTPIN, OUTPUT);
   analogWrite(BACKLIGHTPIN, 255);
@@ -906,29 +1132,40 @@ void setup() {
   lcd.begin(20, 4);
   lcd.setCursor(0, 0);
   // Print a message to the LCD.
-  lcd.print("Starting...");
+  lcd.print("Finding IP address");
+  lcd.setCursor(0, 1);
+  lcd.print("using DHCP...");
   
   turnBacklightOn();
   
   // Open serial communications and wait for port to open:
   Serial.begin(9600);
   
+  //Serial.println("SB");
+  
   // this check is only needed on the Leonardo:
-   while (!Serial) {
-    ; // wait for serial port to connect. Needed for Leonardo only
-  }
+   //while (!Serial) {
+    //; // wait for serial port to connect. Needed for Leonardo only
+  //}
 
+  byte ethRC = Ethernet.begin(mac);
   // start the Ethernet connection:
-  if (Ethernet.begin(mac) == 0) {
-    //Serial.println("Failed to configure Ethernet using DHCP");
-    // no point in carrying on, so do nothing forevermore:
-    for(;;)
-      ;
+  if (ethRC == 0) {
+    // Failed to connect with DHCP  
+    lcd.print("FAILED");
+    delay(4000);
+  } else {
+    lcd.print("OK");
+    lcd.setCursor(0, 2);
+    printIPAddress();
+    delay(4000);
   }
   
 #if defined(DEV)
-  printNetworkSettings();
-  delay(4000);
+  if (ethRC) {
+    printNetworkSettings();
+    delay(4000);
+  }
 #endif
   
   timeSinceLastLiveConnAttempt = millis() - 60000;
@@ -970,6 +1207,9 @@ void loop() {
   for (i = 0; i < 4; i++) {
     
     buttonReadState = digitalRead(A0 + i);
+    //Serial.print(i);
+    //Serial.print(" = ");
+    //Serial.println(buttonReadState);
   
     // If the button is pressed, print on screen
     if (buttonReadState == LOW && (buttonState & (1 << i))) {
@@ -981,11 +1221,17 @@ void loop() {
     else if (buttonReadState == HIGH && !(buttonState & (1 << i))) {
       buttonState = buttonState | (1 << i);
     }
+    
+    //delay(500);
   }
   
   delay(20);
   
   checkForSerialData();
+  
+  delay(20);
+  
+  //checkForHTTPData();
   
   delay(5);
   
