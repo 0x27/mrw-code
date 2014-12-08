@@ -1,0 +1,4 @@
+#!/bin/bash
+cd /home/mwhitehead/opt/nanobrokerIBM
+nohup ./broker broker.cfg >> /tmp/nanobroker.log &
+

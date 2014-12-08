@@ -1,0 +1,30 @@
+# /etc/init/ezstream
+
+description "Ezstream - for streaming MPD music over HTTP"
+author      "Matthew Whitehead"
+
+# If network interface is up, we're ok to start.
+start on (local-filesystems and net-device-up IFACE=eth0)
+
+stop on shutdown
+
+# Automatically Respawn:
+respawn
+respawn limit 99 5
+
+script
+    # Not sure why $HOME is needed, but we found that it is:
+    export HOME="/home/mwhitehead/iTunesMedia/Music" 
+
+    sleep 10
+
+    nohup ezstream -c /home/mwhitehead/ezstream_conf.xml &>>/tmp/ezstream.log &
+    #exec /usr/local/bin/node $HOME/node/notify.js 13002 >> /var/log/node.log 2>&1
+end script
+
+post-start script
+   # Optionally put a script here that will notify you if the app has be (re)started
+   # e.g. /root/bin/emailme.sh "Ezstream has started!"
+end script
+
+
