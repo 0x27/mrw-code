@@ -291,11 +291,9 @@
                            </div>
 
                            <div id="commentarea">
-                             <form name="commentsform" id="commentsform">
-                               <label for="comment">Data label</label>
-                               <input type="text" name="comment" id="comment" width="200" size="60"/>
-                               <input type="submit" value="Submit" onClick="JavaScript:handleCommentSubmit()"/>
-                             </form>
+                             <label for="comment">Data label</label>
+                             <input type="text" name="comment" id="comment" width="200" size="60"/>
+                             <button type="button" onClick="JavaScript:return handleCommentSubmit();">Submit</button>
                            </div>
 
                         </div>

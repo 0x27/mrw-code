@@ -4,11 +4,15 @@
 
      function handleCommentSubmit() {
        if (lastCommentSubmitTime == 0 || ((new Date().getTime() - lastCommentSubmitTime) > 20000)) {
-         var theComment = document.getElementById('comment').innerHTML;
-         alert('submit ' + theComment);
+         var theComment = document.getElementById('comment').value;
+         $.get('/comments/index.php?comment=' + theComment, function(d){
+           document.getElementById('comment').value = "";
+           alert('Comment submitted');
+         });
        } 
 
        lastCommentSubmitTime = new Date().getTime();
+       return false;
      }
    
      setInterval ( "loadmusiclist()", 15000 );
