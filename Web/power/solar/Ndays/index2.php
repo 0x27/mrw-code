@@ -13,7 +13,7 @@ mysql_select_db("mydata", $con);
 
 $i = 0;
 $queryString = "";
-$numberOfDaysHistory = 10;
+$numberOfDaysHistory = 1;
 $specifiedNumberOfDaysHistory = $_GET['numberofdayshistory'];
 
 if (strlen($specifiedNumberOfDaysHistory) > 0)

@@ -15,7 +15,7 @@
   <!--  jquery code to create the graph  -->
   <script id="source" language="javascript" type="text/javascript">
   function createGraph() {
-     $.get('/gas/Ndays?numberofdayshistory=20', function(d){
+     $.get('/gas/Ndays?numberofdayshistory=35', function(d){
          var gasToday = [];
          $(d).find('nextrow').each(function(){
          var $record = $(this);
@@ -30,7 +30,7 @@
              bars: {show: true, fill: true, barWidth: 24*60*60*550}
             }],
             {
-             xaxis: {mode: "time", tickSize:[1, "day"]},
+             xaxis: {mode: "time", tickSize:[3, "day"]},
              series: { color: "rgba(135, 182, 217, 0.8)"},
              grid: { color: "rgba(135, 182, 217, 0.8)"}
             }

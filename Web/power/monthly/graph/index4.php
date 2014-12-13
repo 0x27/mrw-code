@@ -2,7 +2,7 @@
  <html lang="en" style="height: auto; width: 600px">
  <head>
 
-   <title>Annual Solar Production</title>
+   <title>Historic Electricity Usage</title>
    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
 
    <!--  Load the jquery javascript code  -->
@@ -16,13 +16,19 @@
   <!--  jquery code to create the graph  -->
   <script id="source" language="javascript" type="text/javascript">
    function createGraph() {
-       $.get('/power/solar/history', function(d){
+       $.get('/power/Ndays?numberofdayshistory=318', function(d){
          var powerToday = [];
+         var lowPowerNatAvg = [];
+         var mediumPowerNatAvg = [];
+         var highPowerNatAvg = [];
          $(d).find('nextrow').each(function(){
          var $record = $(this);
-         var $timestamp = $record.find('next_timestamp').text() * 1000;
-         var $watts = $record.find('next_solar_watt_hours').text();
+         var $timestamp = $record.find('timestamp_of_day').text() * 1000;
+         var $watts = $record.find('total_watt_hours').text() / 1000;
          powerToday.push([$timestamp, $watts]);
+         lowPowerNatAvg.push([$timestamp, 5.75]);
+         mediumPowerNatAvg.push([$timestamp, 9.04]);
+         highPowerNatAvg.push([$timestamp, 13.97]);
        });
 
        $.plot($("#thegraph"),
@@ -31,6 +37,30 @@
              bars: {show: true},
              points: {show:false},
              lines: {show:false}
+            },
+            {
+             data: lowPowerNatAvg,
+             bars: {show: false},
+             points: {show: false},
+             lines: {show: true},
+             //label: "Low-Use National Average",
+             color: "rgba(40, 230, 30, 1.4)"
+            },
+            {
+             data: mediumPowerNatAvg,
+             bars: {show: false},
+             points: {show: false},
+             lines: {show: true},
+             //label: "National Average",
+             color: "rgba(230, 130, 10, 1.8)"
+            },
+            {
+             data: highPowerNatAvg,
+             bars: {show: false},
+             points: {show: false},
+             lines: {show: true},
+             //label: "High-Use National Average",
+             color: "rgba(180, 20, 20, 1.8)"
             }],
             {
              xaxis: {mode: "time"},
@@ -48,7 +78,7 @@
 </head>
 <body>
   <!--  The DIV to hold the power graph  -->
-  <div id="thegraph" style="width:900px;height:350px;"></div>
+  <div id="thegraph" style="width:600px;height:350px;"></div>
 </body>
 </html>
 

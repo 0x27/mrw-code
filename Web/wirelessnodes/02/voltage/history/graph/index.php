@@ -7,7 +7,7 @@
 
    <!--  Load the jquery javascript code  -->
 
-   <link type="text/css" href="css/redmond/jquery-ui-1.7.2.custom.css" rel="stylesheet" />
+   <link type="text/css" href="/css/redmond/jquery-ui-1.7.2.custom.css" rel="stylesheet" />
    <script src="/js/jquery-1.3.2.min.js" type="text/javascript"></script>
    <script src="/js/jquery-ui-1.7.2.custom.min.js" type="text/javascript"></script>
    <script language="javascript" type="text/javascript" src="/jquery/flot/jquery.flot.js"></script>
@@ -16,7 +16,7 @@
   <script id="source" language="javascript" type="text/javascript">
   var sensorVoltages = [];
   function createGraph() {
-     $.get('/wirelessnodes/02/voltage/Ndays?numberofdayshistory=450', function(d){
+     $.get('/wirelessnodes/02/voltage/Ndays?numberofdayshistory=150', function(d){
           sensorVoltages[0] = [];
           $(d).find('nextrow').each(function(){
              var $record = $(this);
@@ -25,7 +25,7 @@
              sensorVoltages[0].push([$timestamp, $voltage]);
            });
 
-           $.get('/wirelessnodes/03/voltage/Ndays?numberofdayshistory=1', function(d){
+           $.get('/wirelessnodes/03/voltage/Ndays?numberofdayshistory=150', function(d){
               sensorVoltages[1] = [];
               $(d).find('nextrow').each(function(){
                  var $record = $(this);
@@ -34,7 +34,7 @@
                  sensorVoltages[1].push([$timestamp, $voltage]);
               });
 
-              $.get('/wirelessnodes/04/voltage/Ndays?numberofdayshistory=1', function(d){
+              $.get('/wirelessnodes/04/voltage/Ndays?numberofdayshistory=150', function(d){
                  sensorVoltages[2] = [];
                  $(d).find('nextrow').each(function(){
                     var $record = $(this);
@@ -52,16 +52,16 @@
             { data: sensorVoltages[0],
               points: {show: false},
               lines: {show: true},
-              label: "Sensor 2 "},
+              label: "Loft"},
             { data: sensorVoltages[1],
               points: {show: false},
               lines: {show: true},
-              label: "Sensor 3 ",
+              label: "Lounge",
               color: "rgba(195, 110, 50, 1.4)"},
             { data: sensorVoltages[2],
               points: {show: false},
               lines: {show: true},
-              label: "Sensor 4 ",
+              label: "Garden",
               color: "rgba(110, 180, 30, 1.4)"}
             ],
           {

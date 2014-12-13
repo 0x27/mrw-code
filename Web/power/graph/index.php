@@ -2,7 +2,7 @@
  <html lang="en" style="height: auto; width: 600px">
  <head>
 
-   <title>Annual Solar Production</title>
+   <title>Electricity Usage Today</title>
    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
 
    <!--  Load the jquery javascript code  -->
@@ -16,30 +16,29 @@
   <!--  jquery code to create the graph  -->
   <script id="source" language="javascript" type="text/javascript">
    function createGraph() {
-       $.get('/power/solar/history', function(d){
-         var powerToday = [];
-         $(d).find('nextrow').each(function(){
+     $.get('/power/today?numhoursfrommidnight=24', function(d){
+       var powerToday = [];
+       var firstTimestamp = 0;
+       var lastTimestamp = 0;
+       $(d).find('nextrow').each(function(){
          var $record = $(this);
-         var $timestamp = $record.find('next_timestamp').text() * 1000;
-         var $watts = $record.find('next_solar_watt_hours').text();
+         var $timestamp = $record.find('timestamp').text() * 1000;
+         var $watts = $record.find('watts').text();
+         if (firstTimestamp == 0) firstTimestamp = $timestamp;
+         lastTimestamp = $timestamp;
          powerToday.push([$timestamp, $watts]);
        });
+      
+       powerToday.push([lastTimestamp, 0]);
+       powerToday.push([firstTimestamp + (22 * 60 * 60 * 1000), 0]);
 
-       $.plot($("#thegraph"),
-           [{
-             data: powerToday,
-             bars: {show: true},
-             points: {show:false},
-             lines: {show:false}
-            }],
-            {
-             xaxis: {mode: "time"},
-             series: { points: {show: false}, lines: {show:true}, color: "rgba(135, 182, 217, 0.8)"},
-             grid: { color: "rgba(135, 182, 217, 0.8)"}
-            }
-          );
+       $.plot($("#thegraph"), [ powerToday ], {
+         xaxis: {mode: "time"},
+         series: { points: {show: false}, lines: {show:true}, color: "rgba(135, 182, 217, 0.8)"},
+         grid: { color: "rgba(135, 182, 217, 0.8)"}
        });
-     }
+     });
+   }
   </script>
 
   <script language="javascript" type="text/javascript">
