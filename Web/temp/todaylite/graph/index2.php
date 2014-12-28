@@ -96,7 +96,7 @@
        lfTToday = [];
        lgTToday = [];
 
-         $.get('/temp/today/index-noauth.php?daysold=1', function(d){
+         $.get('/temp/today/index-noauth.php?daysold=0', function(d){
            $(d).find('nextrow').each(function(){
            var $record = $(this);
            var $timestamp = $record.find('timestamp').text() * 1000;
@@ -104,7 +104,7 @@
            idTToday.push([$timestamp, $data]);
            });
 
-           $.get('/temp2/today/index-noauth.php?daysold=1', function(e){
+           $.get('/temp2/today/index-noauth.php?daysold=0', function(e){
              $(e).find('nextrow').each(function(){
              var $record = $(this);
              var $timestamp = $record.find('timestamp').text() * 1000;
@@ -112,7 +112,7 @@
              lfTToday.push([$timestamp, $data]);
              });
 
-             $.get('/temp3/today/index-noauth.php?daysold=1', function(e){
+             $.get('/temp3/today/index-noauth.php?daysold=0', function(e){
                 $(e).find('nextrow').each(function(){
                 var $record = $(this);
                 var $timestamp = $record.find('timestamp').text() * 1000;
