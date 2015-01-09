@@ -1,0 +1,59 @@
+#!/usr/bin/perl
+use lib '/home/mwhitehead/Web/apps/mqtt-perl/';
+use MQTT::Client;
+
+print "<?xml version=\"1.0\" encoding=\"ISO-8859-1\" ?>";
+print "<rss version=\"2.0\">";
+print "<channel>\n";
+print "<title>Stats</title>\n";
+print "<link></link>\n";
+print "<description>Stats about the house</description>\n";
+
+my $mqtt = MQTT::Client->new({
+   brokerIP => "localhost",
+   callback_publish => \&publish_callback
+});
+my $i = 0;
+
+# To perform a 'one-shot' publish to a topic:
+$mqtt->connect();
+$mqtt->subscribe("local/rfm12/nodes/03/temp",0);
+$mqtt->subscribe("local/rfm12/nodes/03/voltage",0);
+$mqtt->subscribe("local/rfm12/nodes/02/temp",0);
+$mqtt->subscribe("local/rfm12/nodes/02/voltage",0);
+$mqtt->listen_for_publishes();
+
+sub publish_callback {
+   my $topic = shift;
+   my $msg = shift;
+   $i++;
+   print "<item>\n";
+   print "<title>Lounge Temperature " . $i . "</title>\n";
+   print "<link>";
+   print $topic;
+   print "</link>\n";
+   print "<description>";
+   if ($topic eq 'local/rfm12/nodes/03/temp') {
+      print "Lounge: " . $msg . " deg";
+   } elsif ($topic eq 'local/rfm12/nodes/02/temp') {
+      print "Loft: " . $msg . " deg";
+   } elsif ($topic eq 'local/rfm12/nodes/03/voltage') {
+      print "Node 3: " . $msg . "v";
+   } elsif ($topic eq 'local/rfm12/nodes/02/voltage') {
+      print "Node 2: " . $msg . "v";
+   }
+   print "</description>\n";
+   print "</item>\n";
+   if ($msg eq 'quit') {
+      $mqtt->disconnect();
+      exit 0;
+   }
+
+   if ($i == 4) {
+     print "</channel>\n";
+     print "</rss>\n";
+     # After getting the last message, quit
+     $mqtt->disconnect();
+     exit 0;
+   }
+}

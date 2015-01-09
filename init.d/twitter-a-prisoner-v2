@@ -1,0 +1,7 @@
+#!/bin/bash
+cd /home/mwhitehead/Web/apps/mqtt-perl/ 
+nohup ./getprisonertwitters-v2.pl >> /tmp/twitpris-sub-v2.log &
+
+cd /home/mwhitehead/opt/twitter-a-prisoner/tap_ma/replies/
+nohup perl o_replies.pl >> /tmp/twitter-bridge.log &
+

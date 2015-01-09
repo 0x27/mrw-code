@@ -1,0 +1,5 @@
+#!/bin/sh
+# Perform analysis of mysql data to create stats from it 
+
+/usr/bin/flock -n /tmp/dbstats.lck -c "perl /home/mwhitehead/opt/housemonitor/dbaveragecalculations.pl >> /tmp/dbstats.log"
+

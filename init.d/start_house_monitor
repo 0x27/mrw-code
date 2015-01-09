@@ -1,0 +1,6 @@
+#!/bin/bash
+cd /home/mwhitehead/opt/housemonitor
+date >> /tmp/housemonitor.log
+echo "House monitor started" >> /tmp/housemonitor.log
+nohup perl housemonitor.pl >> /tmp/housemonitor.log &
+
