@@ -27,6 +27,8 @@ public class BootReceiver extends BroadcastReceiver {
     public void onReceive(Context context, Intent intent) {
         Log.i("com.mwhitehead.test", "Boot received by Matt's app");
 
+        context.startService(new Intent(context, BackgroundService.class));
+
         CharSequence text = "My App Started";
         int duration = Toast.LENGTH_LONG;
 

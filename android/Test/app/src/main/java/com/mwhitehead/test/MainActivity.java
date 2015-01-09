@@ -5,6 +5,7 @@ import android.app.AlarmManager;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.content.Context;
+import android.content.IntentFilter;
 import android.net.Uri;
 import android.os.Bundle;
 import android.support.v4.app.NotificationCompat;
@@ -25,11 +26,15 @@ public class MainActivity extends Activity {
 
     private static boolean headphones = true;
 
+    private static boolean serviceStarted = false;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         Log.i("com.mwhitehead.test", "Main activity created");
+
+
 
     }
 
