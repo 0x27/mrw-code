@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <string name="app_name">Matt</string>
+    <string name="hello_world">Hi World!</string>
+    <string name="action_settings">The Settings</string>
+    <string name="button_text">Press Me</string>
+    <string name="title_activity_main_activity2">MainActivity2</string>
+    <string name="title_activity_main_activity3">MainActivity3</string>
+    <string name="service_name">MattNotificationActivity</string>
+    <string name="action_enable_notifications">Enable Notifications</string>
+    <string name="action_send_notification">Notification</string>
+
+</resources>
