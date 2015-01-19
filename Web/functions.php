@@ -873,21 +873,26 @@
 
      });
 
+     var powerLoading = false;
      function loadpower()
      {
-        // Change e.g. 0.28 kw into a percentage of 3000 watts
-        $.get('/power', function(d){
-          $('#progressbarenergy').progressbar('option', 'value', ((d * 1000) / 2000 * 100));
-          $('#energyamountlabel').html(d * 1000);
-          loadhousedata();
-
-          // Change the watts into a percentage of 200 watts
-          $.get('/power/solar', function(d){
-            $('#progressbarsolar').progressbar('option', 'value', ((d  / 200) * 100));
-            $('#solaramountlabel').html(d);
+        if (!powerLoading) {
+          powerLoading = true;
+          // Change e.g. 0.28 kw into a percentage of 3000 watts
+          $.get('/power', function(d){
+            $('#progressbarenergy').progressbar('option', 'value', ((d * 1000) / 2000 * 100));
+            $('#energyamountlabel').html(d * 1000);
             loadhousedata();
+
+            // Change the watts into a percentage of 200 watts
+            $.get('/power/solar', function(d){
+              $('#progressbarsolar').progressbar('option', 'value', ((d  / 200) * 100));
+              $('#solaramountlabel').html(d);
+              loadhousedata();
+              powerLoading = false;
+            }, "text");
           }, "text");
-       }, "text");
+        }
      }
 
      function loadtemp()
