@@ -8,6 +8,7 @@ import android.content.Context;
 import android.content.IntentFilter;
 import android.net.Uri;
 import android.os.Bundle;
+import android.provider.Settings;
 import android.support.v4.app.NotificationCompat;
 import android.util.Log;
 import android.view.Menu;
@@ -26,7 +27,7 @@ public class MainActivity extends Activity {
 
     private static boolean headphones = true;
 
-    private static boolean serviceStarted = false;
+    private static boolean led = true;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -34,8 +35,7 @@ public class MainActivity extends Activity {
         setContentView(R.layout.activity_main);
         Log.i("com.mwhitehead.test", "Main activity created");
 
-
-
+        //startService(new Intent(this, BackgroundService.class));
     }
 
     protected void onStart() {
