@@ -1,6 +1,8 @@
 #!/usr/bin/perl
 use lib '/home/mwhitehead/Web/apps/mqtt-perl/';
 use MQTT::Client;
+use Thread;
+use threads::shared;
 
 my $mqtt = MQTT::Client->new({
    brokerIP => "localhost",
@@ -11,8 +13,20 @@ my $mqtt = MQTT::Client->new({
 # To perform a 'one-shot' publish to a topic:
 $mqtt->connect();
 $mqtt->subscribe("local/rfm12/nodes/04/lastreceived",0);
-$mqtt->listen_for_publishes();
+$listener = Thread->new(\&thread1);
 
+sub thread1 {
+  $mqtt->listen_for_publishes();
+}
+
+sleep(6);
+
+# If we haven't exited already, return 0.0 for the voltage and exit
+$mqtt->disconnect();
+sleep(1);
+print "0 0 0 00:00:00";
+sleep(1);
+exit 0;
 
 sub publish_callback {
    my $topic = shift;
