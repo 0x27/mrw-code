@@ -1,0 +1,148 @@
+<html>
+  <head>
+    <meta name="viewport" content="width=320, user-scalable=yes">
+    <title>Matthew's House - Status</title>
+
+    <style type="text/css">
+    @import "http://o.aolcdn.com/dojo/1.2.0/dojox/widget/ColorPicker/ColorPicker.css";
+    @import "http://o.aolcdn.com/dojo/1.2.0/resources/dojo.css";
+    @import "http://o.aolcdn.com/dojo/1.2.0/dijit/themes/soria/soria.css";
+    @import "http://o.aolcdn.com/dojo/1.2.0/dijit/themes/soria/tundra.css";
+    body {font-family:tahoma}
+    </style>
+
+    <script type="text/javascript" src="http://o.aolcdn.com/dojo/1.2.0/dojo/dojo.xd.js"
+       djConfig="parseOnLoad: true"></script>
+
+    <script type="text/javascript"> 
+       dojo.require("dojox.widget.ColorPicker");
+       dojo.require("dojox.widget.RollingList");
+       dojo.require("dojox.data.XmlStore");
+       dojo.require("dojo.data.ItemFileReadStore");
+       dojo.require("dijit.TitlePane");
+       dojo.require("dijit.layout.BorderContainer");
+       dojo.require("dijit.layout.ContentPane");
+       dojo.require("dijit.ProgressBar");
+       dojo.require("dojo.parser");
+
+       dojo.addOnLoad(go);
+ 
+       function go(){
+
+          var theBar = new dijit.ProgressBar({id: "energyBar", maximum: 2000, duration: 2000,
+             report:function(percent){
+                return dojo.string.substitute("${0} watts", [this.progress]);
+             }
+          }, dojo.byId("energyBar"));
+
+          var theBar = new dijit.ProgressBar({id: "tempBar", maximum: 30, duration: 2000,
+             report:function(percent){
+                return dojo.string.substitute("${0} degrees C", [this.progress]);
+             }
+          }, dojo.byId("tempBar"));
+
+          dijit.byId("energyBar").update({progress:490});
+
+          dijit.byId("tempBar").update({progress:18});
+
+          updateValues();
+       }
+
+       function updateValues(){
+          dojo.xhrGet({
+            url: "music/playing",
+            load: function(data, ioargs){
+               if (data.length > 60){
+                  dojo.byId("musicContainer").innerHTML = data;
+               }
+               else
+               {
+                  dojo.byId("musicContainer").innerHTML = "No music playing";
+               }
+            },
+            error: function(error,ioargs){
+               alert(error);
+            }
+         });
+       }
+
+       setInterval("updateValues()", 10000);
+
+    </script>
+  </head>
+
+  <body class="soria">
+
+     <div dojoType="dojox.data.XmlStore" url="music" jsId="store" rootItem="item" label="position"></div>
+     <div dojoType="dojox.data.XmlStore" url="music" jsId="store1" rootItem="item" label="artist"></div>
+     <div dojoType="dojox.data.XmlStore" url="music" jsId="store2" rootItem="item" label="track"></div>
+
+     <div dojoType="dijit.TitlePane" title="<b>Music</b>">
+        <div dojoType="dijit.layout.ContentPane" id="left" region="left" style="background-color:white">
+           <span id="musicContainer">
+              Nothing Playing
+           </span>
+           <span id="musicContainer2">
+              Nothing Playing
+           </span>
+        </div>
+        <p></p>
+        <div dojoType="dijit.layout.BorderContainer" style="height:400px;width:800px;background-color:white;border-style:none"> 
+           <div dojoType="dijit.layout.ContentPane" id="left_pos" region="left" style="background-color:white;width:50px;border-style:none;">
+              <div dojoType="dojox.widget.RollingList" store="store" style="border-style:none"></div> 
+           </div>
+           <div dojoType="dijit.layout.ContentPane" id="mid_artist" region="center" style="background-color:white;width:350px;border-style:none;">
+              <div dojoType="dojox.widget.RollingList" store="store1" style="border-style:none;width:inherit;"></div> 
+           </div>
+           <div dojoType="dijit.layout.ContentPane" id="right_track" region="right" style="background-color:white;width:400px;border-style:none">
+              <div dojoType="dojox.widget.RollingList" store="store2" style="border-style:none;width:inherit;"></div> 
+           </div>
+        </div>
+     </div>
+
+     <p></p>
+
+     <div dojoType="dijit.TitlePane" title="<b>Energy Consumption</b>">
+        <!--<div dojoType="dijit.layout.BorderContainer" design="screenDesign">-->
+           <span>Watts</span>
+           <div id="energyBar"></div>
+           <p></p>
+           <span>Temperature</span>
+           <div id="tempBar"></div>
+
+           <!--<div dojoType="dijit.layout.ContentPane" id="left" region="left" style="background-color:lightblue;width: 125px;">
+              <B>Tutorials List</B>
+              <ul>
+                 <li>Struts2</li>
+                 <li>JSP</li>
+                 <li>Servlets</li>
+                 <li>EJB</li>
+                 <li>Hibernate</li>
+              </ul>
+           </div>-->
+  
+           <!--<div dojoType="dijit.layout.ContentPane" id="center" region="center" style="background-color:white">
+              <blockquote>Introduction</a>
+                 <ol>
+                    <li>Short description</li>
+                    <li>Brief description </li>
+                    <li>Running Examples</li>
+                 </ol>
+              </blockquote>
+           </div>
+
+           <div dojoType="dijit.layout.ContentPane" id="right" region="right" style="background-color:pink; width: 130px;">
+              <p><B>Advertisement</B></p>
+              <li>Hello</li>
+           </div>-->
+        <!--</div>-->
+     </div>
+
+     <p></p>
+
+     <!--<div dojoType="dijit.TitlePane" title="<b>Music</b>">
+        <div id="colorPicker" dojoType="dojox.widget.ColorPicker"></div>
+     </div>-->
+
+  </body>
+</html>

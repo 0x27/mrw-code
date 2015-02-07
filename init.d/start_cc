@@ -1,0 +1,7 @@
+#!/bin/bash
+cd /home/mwhitehead/opt/cc
+. ./set_serial
+date >> /tmp/cc.log
+echo "Current cost app started" >> /tmp/cc.log
+nohup perl currentcost.pl >> /dev/null 2>>/tmp/cc.log &
+

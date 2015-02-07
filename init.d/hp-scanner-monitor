@@ -1,0 +1,7 @@
+#!/bin/bash
+cd /home/mwhitehead/opt/hp-scanner-monitor
+nohup ./monitor-scanner-for-matt.sh >> /tmp/monitor-scanner-for-matt.log 2>&1 &
+
+cd /home/mwhitehead/opt/hp-scanner-monitor
+nohup ./monitor-scanner-for-liv.sh >> /tmp/monitor-scanner-for-liv.log 2>&1 &
+

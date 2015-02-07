@@ -1,0 +1,6 @@
+modprobe -r pl2303
+modprobe pl2303
+date >> /tmp/rfm12hub.log
+echo "RFM12 hub started" >> /tmp/rfm12hub.log
+nohup perl -w -I /home/mwhitehead/opt/rfm12 /home/mwhitehead/opt/rfm12/rfm12monitor.pl >> /dev/null 2>>/tmp/rfm12hub.log &
+

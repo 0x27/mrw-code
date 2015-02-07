@@ -1,0 +1,79 @@
+
+Welcome to Node-RED
+===================
+
+6 May 21:40:57 - [red] Version: 0.7.2.git
+6 May 21:40:57 - [red] Loading palette nodes
+6 May 21:41:20 - [26-rawserial.js] Info : only really needed for Windows boxes without serialport npm module installed.
+6 May 21:41:34 - ------------------------------------------
+6 May 21:41:34 - [38-rpi-pibrella.js] Info : Ignoring Raspberry Pi specific node.
+6 May 21:41:34 - [78-ledborg.js] Info : PiBorg hardware : LedBorg not found
+6 May 21:41:34 - [74-js2xml.js] Error: Cannot find module 'js2xmlparser'
+6 May 21:41:34 - [74-swearfilter.js] Error: Cannot find module 'badwords'
+6 May 21:41:34 - [72-wordpos.js] Error: Cannot find module 'wordpos'
+6 May 21:41:34 - [69-ddbout.js] Error: Cannot find module 'aws-sdk'
+6 May 21:41:34 - [78-digiRGB.js] Error: Cannot find module 'node-hid'
+6 May 21:41:34 - [35-arduino.js] Error: Cannot find module 'firmata'
+6 May 21:41:34 - [36-rpi-gpio.js] Info : Ignoring Raspberry Pi specific node.
+6 May 21:41:34 - [145-BBB-hardware.js] Error: Cannot find module 'bonescript'
+6 May 21:41:34 - [38-rpi-pibrella.js] Info : Ignoring Raspberry Pi specific node.
+6 May 21:41:34 - [78-ledborg.js] Info : PiBorg hardware : LedBorg not found
+6 May 21:41:34 - [76-blinkstick.js] Error: Cannot find module 'blinkstick'
+6 May 21:41:34 - [77-blink1.js] Error: Cannot find module 'node-blink1'
+6 May 21:41:34 - [78-digiRGB.js] Error: Cannot find module 'node-hid'
+6 May 21:41:34 - [100-heatmiser-in.js] Error: Cannot find module 'heatmiser'
+6 May 21:41:34 - [101-heatmiser-out.js] Error: Cannot find module 'heatmiser'
+6 May 21:41:34 - [103-hue_discover.js] Error: Cannot find module 'node-hue-api'
+6 May 21:41:34 - [104-hue_manage.js] Error: Cannot find module 'node-hue-api'
+6 May 21:41:34 - [101-scanBLE.js] Error: Cannot find module 'noble'
+6 May 21:41:34 - [79-sensorTag.js] Error: Cannot find module 'sensortag'
+6 May 21:41:34 - [60-wemo.js] Error: Cannot find module 'wemo'
+6 May 21:41:34 - [103-hue_discover.js] Error: Cannot find module 'node-hue-api'
+6 May 21:41:34 - [104-hue_manage.js] Error: Cannot find module 'node-hue-api'
+6 May 21:41:34 - [23-watch.js] Error: Cannot find module 'fs.notify'
+6 May 21:41:34 - [39-wol.js] Error: Cannot find module 'wake_on_lan'
+6 May 21:41:34 - [67-leveldb.js] Error: Cannot find module 'level'
+6 May 21:41:34 - [57-nma.js] Error: Cannot find module 'nma'
+6 May 21:41:34 - [57-notify.js] Error: Cannot find module 'growl'
+6 May 21:41:34 - [57-pushover.js] Error: Cannot find module 'pushover-notifications'
+6 May 21:41:34 - [79-sensorTag.js] Error: Cannot find module 'sensortag'
+6 May 21:41:34 - [32-feedparse.js] Error: Cannot find module 'feedparser'
+6 May 21:41:34 - [61-email.js] Error: Cannot find module 'nodemailer'
+6 May 21:41:34 - [61-imap.js] Error: Cannot find module 'imap'
+6 May 21:41:34 - [69-mpd.js] Error: Cannot find module 'komponist'
+6 May 21:41:34 - [57-nma.js] Error: Cannot find module 'nma'
+6 May 21:41:34 - [57-notify.js] Error: Cannot find module 'growl'
+6 May 21:41:34 - [57-prowl.js] Error: Cannot find module 'node-prowl'
+6 May 21:41:34 - [57-pushbullet.js] Error: Cannot find module 'pushbullet'
+6 May 21:41:34 - [57-pushover.js] Error: Cannot find module 'pushover-notifications'
+6 May 21:41:34 - [79-snapchat.js] Error: Cannot find module 'snapchat'
+6 May 21:41:34 - [56-twilio.js] Error: Cannot find module 'twilio'
+6 May 21:41:34 - [92-xmpp.js] Error: Cannot find module 'simple-xmpp'
+6 May 21:41:34 - [65-redisout.js] Error: Cannot find module 'redis'
+6 May 21:41:34 - [66-mongodb.js] Error: Cannot find module 'mongodb'
+6 May 21:41:34 - [69-ddbout.js] Error: Cannot find module 'aws-sdk'
+6 May 21:41:34 - [67-leveldb.js] Error: Cannot find module 'level'
+6 May 21:41:34 - [110-postgres.js] Error: Cannot find module 'pg'
+6 May 21:41:34 - [79-suncalc.js] Error: Cannot find module 'suncalc'
+6 May 21:41:34 - [56-twilio.js] Error: Cannot find module 'twilio'
+6 May 21:41:34 - [60-wemo.js] Error: Cannot find module 'wemo'
+6 May 21:41:34 - [39-wol.js] Error: Cannot find module 'wake_on_lan'
+6 May 21:41:34 - [72-wordpos.js] Error: Cannot find module 'wordpos'
+6 May 21:41:34 - [92-xmpp.js] Error: Cannot find module 'simple-xmpp'
+6 May 21:41:34 - ------------------------------------------
+6 May 21:41:34 - [red] Server now running at http://192.168.0.2:1880/
+6 May 21:41:34 - [red] Loading flows : flows_mrw-viglen.json
+6 May 21:41:35 - [red] Starting flows
+6 May 21:41:35 - [serial] serial port /dev/ttyUSBRFM opened at 57600 baud
+6 May 21:41:35 - [serial] serial port /dev/ttyUSBCC opened at 9600 baud
+6 May 21:41:35 - [mqtt] [a2190085.5de7] connected to broker tcp://localhost:1883
+7 May 18:47:27 - [red] Stopping flows
+7 May 18:47:27 - [serial] serial port closed
+7 May 18:47:27 - [mqtt] [a2190085.5de7] disconnected from broker tcp://localhost:1883
+7 May 18:47:27 - [serial] serial port /dev/ttyUSBCC error Error: EBADF, read
+7 May 18:47:27 - [red] Starting flows
+7 May 18:47:28 - [serial] serial port closed
+7 May 18:47:28 - [serial] serial port /dev/ttyUSBRFM opened at 57600 baud
+7 May 18:47:28 - [serial] serial port /dev/ttyUSBCC opened at 9600 baud
+7 May 18:47:28 - [mqtt] [3f7778e.fc08888] connected to broker tcp://localhost:1883
+7 May 18:47:42 - [serial] serial port /dev/ttyUSBCC opened at 9600 baud

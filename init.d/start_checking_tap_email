@@ -1,0 +1,4 @@
+#!/bin/bash
+cd /home/mwhitehead/opt/twitter-a-prisoner
+nohup ./cron-sendmail-equivalent.sh &
+

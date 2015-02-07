@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<WalkupScanDestination xmlns="http://www.hp.com/schemas/imaging/con/rest/walkupscan/2009/09/21" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
+
+xsi:schemaLocation="http://www.hp.com/schemas/imaging/con/rest/walkupscan/2009/09/21 WalkupScanDestinations.xsd">
+	
+<Hostname xmlns="http://www.hp.com/schemas/imaging/con/dictionaries/2009/04/06">Email Matt</Hostname>
+	
+<Name xmlns="http://www.hp.com/schemas/imaging/con/dictionaries/1.0/">Email Matt</Name>
+	
+<LinkType>Network</LinkType>
+</WalkupScanDestination>
+
