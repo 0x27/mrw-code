@@ -1,5 +1,5 @@
 /*
- * Script to control a relay.
+ * Script to show how to control a relay.
  *
  * Mostly used as a demo - copy the code snippets into another program.
  *
