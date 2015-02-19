@@ -84,7 +84,6 @@ void setup() {
 }
 
 void loop() {
-  tempI++;
   pinMode(8, INPUT);
   delay(10);
    // read the input on analog pin 0:
@@ -95,7 +94,7 @@ void loop() {
   pinMode(8, OUTPUT);
   delay(10);
   
-  if ((!soundOn && sensorValue > ldrThreshold) || tempI > 135) {
+  if (!soundOn && sensorValue > ldrThreshold) {
     Serial.println("BEEP");
     digitalWrite(13, HIGH);
     int thisNote = 0;
@@ -113,8 +112,6 @@ void loop() {
     Serial.println("OFF");
     soundOn = 0;
   }
-  
-  if (tempI > 250) tempI = 0;
   
   delay(20);        // delay in between reads for stability
 }
