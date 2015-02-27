@@ -301,21 +301,56 @@
 
      function loadHumidityGraph() 
      {
-       $.get('/humidity/today', function(d){
-          var humidityToday = [];
+       var humidityToday = [];
+
+       $.get('/humidity2/today', function(d){
+
+          humidityToday[0] = [];
+
           $(d).find('nextrow').each(function(){ 
              var $record = $(this);     
              var $timestamp = $record.find('timestamp').text() * 1000;
              var $humidity = $record.find('humidity').text();
-             humidityToday.push([$timestamp, $humidity]);
-          });
-          $.plot($("#humiditygraph"), [ humidityToday ], {
-            xaxis: {mode: "time"},
-            series: { points: {show: false}, lines: {show:true}, color: "rgba(135, 182, 217, 0.8)"},
-            grid: { color: "rgba(135, 182, 217, 0.8)"} 
+             humidityToday[0].push([$timestamp, $humidity]);
           });
 
-          loadTemperatureGraph();
+          $.get('/humidity3/today', function(d){
+            humidityToday[1] = [];
+
+            $(d).find('nextrow').each(function(){ 
+              var $record = $(this);     
+              var $timestamp = $record.find('timestamp').text() * 1000;
+              var $humidity = $record.find('humidity').text();
+              humidityToday[1].push([$timestamp, $humidity]);
+            });
+
+            $.plot($("#humiditygraph"), [
+              { data: humidityToday[0],
+                points: {show: false}, 
+                lines: {show: true},
+                label: "Loft"},
+              { data: humidityToday[1],
+                points: {show: false}, 
+                lines: {show: true}, 
+                color: "rgba(110, 180, 30, 1.4)",
+                label: "Lounge"}
+            ], 
+            {
+              legend: { position: "ne", noColumns: 3, margin: 4 },
+              xaxis: { mode: "time" },
+              yaxis: { max: 100 },
+              series: { points: {show: true}, lines: {show:true}, color: "rgba(135, 182, 217, 0.8)"},
+              grid: { color: "rgba(135, 182, 217, 0.8)"} 
+            });
+
+            //$.plot($("#humiditygraph"), [ humidityToday ], {
+            //  xaxis: {mode: "time"},
+            //  series: { points: {show: false}, lines: {show:true}, color: "rgba(135, 182, 217, 0.8)"},
+            //  grid: { color: "rgba(135, 182, 217, 0.8)"} 
+            //});
+
+            loadTemperatureGraph();
+         });
        });
      }
 
@@ -934,7 +969,7 @@
 
      function loadhumidity()
      {
-        $.get('/humidity', function(d){
+        $.get('/humidity2', function(d){
           var humidity = d;
           $('#progressbarhumidity').progressbar('option', 'value', parseInt(d));
           $('#humidityamountlabel').html(d);

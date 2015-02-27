@@ -24,7 +24,7 @@ sleep(6);
 # If we haven't exited already, return 0.0 for the voltage and exit
 $mqtt->disconnect();
 sleep(1);
-print "0 0 0 00:00:00";
+print "------";
 sleep(1);
 exit 0;
 
