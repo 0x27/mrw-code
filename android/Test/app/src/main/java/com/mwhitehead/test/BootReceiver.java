@@ -5,6 +5,7 @@ import android.app.PendingIntent;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.net.Uri;
 import android.util.Log;
 import android.widget.Toast;
@@ -15,7 +16,9 @@ public class BootReceiver extends BroadcastReceiver {
 
     private static boolean alarmForDimmingSet = false;
 
-    private static boolean alarmForBrighteningSet = false;
+    private static boolean alarmForWeekdayBrighteningSet = false;
+
+    private static boolean alarmForWeekendBrighteningSet = false;
 
     private PendingIntent pendingIntent, pendingIntent2;
 
@@ -27,60 +30,64 @@ public class BootReceiver extends BroadcastReceiver {
     public void onReceive(Context context, Intent intent) {
         Log.i("com.mwhitehead.test", "Boot received by Matt's app");
 
-        context.startService(new Intent(context, BackgroundService.class));
-
         CharSequence text = "My App Started";
         int duration = Toast.LENGTH_LONG;
 
         Toast toast = Toast.makeText(context, text, duration);
         toast.show();
 
-        Calendar dimmingCalendar = Calendar.getInstance();
-        dimmingCalendar.set(Calendar.HOUR_OF_DAY, 23);
-        dimmingCalendar.set(Calendar.MINUTE, 00);
-        dimmingCalendar.set(Calendar.SECOND, 0);
+        // Start a background service which has the ability to create our headset receiver
+        context.startService(new Intent(context, BackgroundService.class));
 
-        Calendar brighteningCalendar = Calendar.getInstance();
-        Log.i("com.mwhitehead.test", "Current time: " + brighteningCalendar.toString());
-        Log.i("com.mwhitehead.test", "Current time: " + brighteningCalendar.getTime());
-
-        brighteningCalendar.set(Calendar.HOUR_OF_DAY, 07);
-        brighteningCalendar.set(Calendar.MINUTE, 00);
-        brighteningCalendar.set(Calendar.SECOND, 0);
+        // Get a single instance of a calendar object
+        Calendar calendar = Calendar.getInstance();
 
         if (!alarmForDimmingSet) {
+            // Tell the OS to set an alarm off at 11.15pm to dim the screen
+            calendar.set(Calendar.HOUR_OF_DAY, 23);
+            calendar.set(Calendar.MINUTE, 15);
+            calendar.set(Calendar.SECOND, 0);
 
             Intent myIntent = new Intent("DIM_BRIGHTNESS_FOR_NIGHT", Uri.EMPTY, context, AlarmReceiver.class);
             pendingIntent = PendingIntent.getBroadcast(context, 1, myIntent, PendingIntent.FLAG_UPDATE_CURRENT);
 
             AlarmManager alarmManager = (AlarmManager) context.getSystemService(Context.ALARM_SERVICE);
-            //alarmManager.set(AlarmManager.RTC, calendar.getTimeInMillis(), pendingIntent);
-            alarmManager.setRepeating(AlarmManager.RTC_WAKEUP, dimmingCalendar.getTimeInMillis(), AlarmManager.INTERVAL_DAY, pendingIntent);
-
-            //alarmManager.set(AlarmManager.RTC, calendar.getTimeInMillis(), pendingIntent);
-            //alarmManager.setExact(AlarmManager.RTC_WAKEUP, dimmingCalendar.getTimeInMillis(), pendingIntent);
+            alarmManager.setRepeating(AlarmManager.RTC_WAKEUP, calendar.getTimeInMillis(), AlarmManager.INTERVAL_DAY, pendingIntent);
 
             Log.i("com.mwhitehead.test", "Set broadcast alarm");
             alarmForDimmingSet = true;
-
-            //Toast toast = Toast.makeText(AlarmService.this, "Set alarm for dimming", Toast.LENGTH_LONG);
-            //toast.show();
         }
 
-        if (!alarmForBrighteningSet) {
+        if (!alarmForWeekdayBrighteningSet) {
+            // Tell the OS to set an alarm off at 7.00am to brighten the screen.
+            calendar.set(Calendar.HOUR_OF_DAY, 7);
+            calendar.set(Calendar.MINUTE, 00);
+            calendar.set(Calendar.SECOND, 0);
 
             Intent myIntent = new Intent("INCREASE_BRIGHTNESS_FOR_DAY", Uri.EMPTY, context, AlarmReceiver.class);
             pendingIntent2 = PendingIntent.getBroadcast(context, 2, myIntent, PendingIntent.FLAG_UPDATE_CURRENT);
 
             AlarmManager alarmManager = (AlarmManager) context.getSystemService(Context.ALARM_SERVICE);
-            //alarmManager.set(AlarmManager.RTC, calendar.getTimeInMillis(), pendingIntent);
-            alarmManager.setRepeating(AlarmManager.RTC_WAKEUP, brighteningCalendar.getTimeInMillis(), AlarmManager.INTERVAL_DAY, pendingIntent2);
+            alarmManager.setRepeating(AlarmManager.RTC_WAKEUP, calendar.getTimeInMillis(), AlarmManager.INTERVAL_DAY, pendingIntent2);
 
             Log.i("com.mwhitehead.test", "Set broadcast alarm 2");
-            alarmForBrighteningSet = true;
+            alarmForWeekdayBrighteningSet = true;
+        }
 
-            //Toast toast = Toast.makeText(AlarmService.this, "Set alarm for resetting", Toast.LENGTH_LONG);
-            //toast.show();
+        if (!alarmForWeekendBrighteningSet) {
+            // Tell the OS to set an alarm off at 8.30am to brighten the screen.
+            calendar.set(Calendar.HOUR_OF_DAY, 8);
+            calendar.set(Calendar.MINUTE, 30);
+            calendar.set(Calendar.SECOND, 0);
+
+            Intent myIntent = new Intent("INCREASE_BRIGHTNESS_FOR_WEEKEND", Uri.EMPTY, context, AlarmReceiver.class);
+            pendingIntent2 = PendingIntent.getBroadcast(context, 3, myIntent, PendingIntent.FLAG_UPDATE_CURRENT);
+
+            AlarmManager alarmManager = (AlarmManager) context.getSystemService(Context.ALARM_SERVICE);
+            alarmManager.setRepeating(AlarmManager.RTC_WAKEUP, calendar.getTimeInMillis(), AlarmManager.INTERVAL_DAY, pendingIntent2);
+
+            Log.i("com.mwhitehead.test", "Set broadcast alarm 2");
+            alarmForWeekendBrighteningSet = true;
         }
     }
 }

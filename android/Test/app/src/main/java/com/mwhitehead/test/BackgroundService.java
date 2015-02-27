@@ -12,6 +12,7 @@ import android.widget.Toast;
  * Created by Matthew on 09/01/2015.
  */
 public class BackgroundService extends Service {
+
     public BackgroundService() {
         super();
         Log.i("com.mwhitehead.test", "Background Service Instantiated");
@@ -20,17 +21,23 @@ public class BackgroundService extends Service {
     @Override
     public void onCreate() {
         super.onCreate();
-        Toast.makeText(this, "Service created...", Toast.LENGTH_LONG).show();
         Log.i("com.mwhitehead.test", "Service created...");
     }
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
-        Log.i("com.mwhitehead.test", "Service started...");
+        super.onStartCommand(intent, flags, startId);
 
+        Log.i("com.mwhitehead.test", "Service command called");
+
+        Log.i("com.mwhitehead.test", "Headphone receiver registered");
         IntentFilter receiverFilter = new IntentFilter(Intent.ACTION_HEADSET_PLUG);
         HeadsetReceiver receiver = new HeadsetReceiver();
         registerReceiver(receiver, receiverFilter);
+
+        Toast.makeText(this, "Registered headphone receiver", Toast.LENGTH_LONG).show();
+
+        stopSelf();
 
         return START_STICKY;
     }
@@ -38,7 +45,6 @@ public class BackgroundService extends Service {
     @Override
     public void onDestroy() {
         super.onDestroy();
-        Toast.makeText(this, "Service destroyed...", Toast.LENGTH_LONG).show();
     }
 
     @Override
