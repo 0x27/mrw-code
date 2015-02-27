@@ -53,7 +53,15 @@ while ($retries < $retry_attempts)
 
      while (<SERIAL>)
      {
-        $cc->publish_all($_);
+        print $_ . "\n";
+        my $is_ascii = $_ =~ /^[\x00-\x7F]*\z/;
+
+        if ($is_ascii) {
+          $cc->publish_all($_);
+        } else {
+          print "Not ascii. Restart?\n";
+          sleep 10;
+        }
      }
   }
   else
