@@ -303,7 +303,7 @@
      {
        var humidityToday = [];
 
-       $.get('/humidity2/today', function(d){
+       $.get('/humidity3/today', function(d){
 
           humidityToday[0] = [];
 
@@ -314,7 +314,7 @@
              humidityToday[0].push([$timestamp, $humidity]);
           });
 
-          $.get('/humidity3/today', function(d){
+          $.get('/humidity2/today', function(d){
             humidityToday[1] = [];
 
             $(d).find('nextrow').each(function(){ 
@@ -328,12 +328,12 @@
               { data: humidityToday[0],
                 points: {show: false}, 
                 lines: {show: true},
-                label: "Loft"},
+                label: "Lounge"},
               { data: humidityToday[1],
                 points: {show: false}, 
                 lines: {show: true}, 
                 color: "rgba(110, 180, 30, 1.4)",
-                label: "Lounge"}
+                label: "Loft"}
             ], 
             {
               legend: { position: "ne", noColumns: 3, margin: 4 },
