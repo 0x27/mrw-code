@@ -196,6 +196,11 @@
 
                           <div class="vertical-spacer"></div>
 
+                          <div><span>Hallway Temperature</span><span> - </span><span id="temp4amountlabel">0</span><span> degrees</span></div>
+                          <div class="medium-progress-bar" id="progressbartemp4"></div>
+
+                          <div class="vertical-spacer"></div>
+
                           <div><span>Temperature Today</span></div>
 
                           <div id="temperaturegraph" style="width:600px;height:300px;">
@@ -223,7 +228,16 @@
                           <div class="medium-progress-bar" id="progressbarhumidity" name="progressbarhumidity"></div>
                           <div class="vertical-spacer"></div>
 
-                          <div><span>Lounge Humidity Today</span></div>
+                          <div><span>Loft Humidity</span><span> - </span><span id="humidityloftamountlabel">0</span><span> %</span></div>
+                          <div class="medium-progress-bar" id="progressbarhumidityloft" name="progressbarhumidityloft"></div>
+                          <div class="vertical-spacer"></div>
+
+                          <div><span>Hallway Humidity</span><span> - </span><span id="humidityhallwayamountlabel">0</span><span> %</span></div>
+                          <div class="medium-progress-bar" id="progressbarhumidityhallway" name="progressbarhumidityhallway"></div>
+                          <div class="vertical-spacer"></div>
+
+
+                          <div><span>Humidity Today</span></div>
 
                           <div id="humiditygraph" style="width:600px;height:300px;">
                              <img width="30" src="ajax-loader.gif"/>

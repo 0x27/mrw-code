@@ -20,6 +20,7 @@
      var indoorTempsToday = [];
      var loftTempsToday = [];
      var loungeTempsToday = [];
+     var hallwayTempsToday = [];
  
      var sensorVoltages = [];
 
@@ -34,7 +35,8 @@
        // Only plot the graph if both arrays of data exist
        if (indoorTempsToday.length > 0 && 
            loftTempsToday.length > 0 && 
-           loungeTempsToday.length > 0) {
+           loungeTempsToday.length > 0 &&
+           hallwayTempsToday.length > 0) {
 
          // Add a new data point to the end of which ever data set needs it, to make 
          // sure both graph plots have a data point at the same final timestamp
@@ -70,6 +72,11 @@
                currentTemperature = parseInt(loungeTempsToday[i][1]);
             }
          }
+         for (i = 0; i < hallwayTempsToday.length; i++) {
+            if (parseInt(hallwayTempsToday[i][1]) > parseInt(currentTemperature)) {
+               currentTemperature = parseInt(hallwayTempsToday[i][1]);
+            }
+         }
 
          // Add 5 degrees to the current maximum so the graph is scaled sensibly (and
          // more importantly make sure the labels don't overlap the data)
@@ -89,10 +96,15 @@
            points: {show: false}, 
            lines: {show: true}, 
            color: "rgba(195, 110, 50, 1.4)",
-           label: "Lounge"}
+           label: "Lounge"},
+         { data: hallwayTempsToday,
+           points: {show: false}, 
+           lines: {show: true}, 
+           color: "rgba(215, 150, 70, 1.4)",
+           label: "Hallway"}
          ], 
          {
-           legend: { position: "ne", noColumns: 3, margin: 4 },
+           legend: { position: "ne", noColumns: 4, margin: 4 },
            xaxis: { mode: "time" },
            yaxis: { max: xRange },
            series: { points: {show: true}, lines: {show:true}, color: "rgba(135, 182, 217, 0.8)"},
@@ -106,6 +118,8 @@
        indoorTempsToday = [];
        loftTempsToday = [];
        loungeTempsToday = [];
+       hallwayTempsToday = [];
+
        // Only load the graphs once per load of the website
        //if (indoorTempsToday.length == 0 && 
        //    loftTempsToday.length == 0 &&
@@ -134,7 +148,17 @@
                 var $temperature = $record.find('temperature').text();
                 loungeTempsToday.push([$timestamp, $temperature]);
                 });
-                plotTempGraph();
+
+                $.get('/temp4/today?daysold=' + tempGraphDaysOffset, function(e){
+                   $(e).find('nextrow').each(function(){ 
+                      var $record = $(this);     
+                      var $timestamp = $record.find('timestamp').text() * 1000;
+                      var $temperature = $record.find('temperature').text();
+                      hallwayTempsToday.push([$timestamp, $temperature]);
+                   });
+
+                   plotTempGraph();
+                });
              });
            });
          });
@@ -323,33 +347,43 @@
               var $humidity = $record.find('humidity').text();
               humidityToday[1].push([$timestamp, $humidity]);
             });
+          
+            $.get('/humidity4/today', function(d){
+               humidityToday[2] = [];
 
-            $.plot($("#humiditygraph"), [
-              { data: humidityToday[0],
-                points: {show: false}, 
-                lines: {show: true},
-                label: "Lounge"},
-              { data: humidityToday[1],
-                points: {show: false}, 
-                lines: {show: true}, 
-                color: "rgba(110, 180, 30, 1.4)",
-                label: "Loft"}
-            ], 
-            {
-              legend: { position: "ne", noColumns: 3, margin: 4 },
-              xaxis: { mode: "time" },
-              yaxis: { max: 100 },
-              series: { points: {show: true}, lines: {show:true}, color: "rgba(135, 182, 217, 0.8)"},
-              grid: { color: "rgba(135, 182, 217, 0.8)"} 
+               $(d).find('nextrow').each(function(){ 
+                  var $record = $(this);     
+                  var $timestamp = $record.find('timestamp').text() * 1000;
+                  var $humidity = $record.find('humidity').text();
+                  humidityToday[2].push([$timestamp, $humidity]);
+               });
+
+               $.plot($("#humiditygraph"), [
+                  { data: humidityToday[0],
+                    points: {show: false}, 
+                    lines: {show: true},
+                    label: "Lounge"},
+                  { data: humidityToday[1],
+                    points: {show: false}, 
+                    lines: {show: true}, 
+                    color: "rgba(110, 180, 30, 1.4)",
+                    label: "Loft"},
+                  { data: humidityToday[2],
+                    points: {show: false}, 
+                    lines: {show: true}, 
+                    color: "rgba(150, 190, 50, 1.4)",
+                    label: "Hallway"}
+               ], 
+               {
+                  legend: { position: "ne", noColumns: 3, margin: 4 },
+                  xaxis: { mode: "time" },
+                  yaxis: { max: 100 },
+                  series: { points: {show: true}, lines: {show:true}, color: "rgba(135, 182, 217, 0.8)"},
+                  grid: { color: "rgba(135, 182, 217, 0.8)"} 
+               });
+
+               loadTemperatureGraph();
             });
-
-            //$.plot($("#humiditygraph"), [ humidityToday ], {
-            //  xaxis: {mode: "time"},
-            //  series: { points: {show: false}, lines: {show:true}, color: "rgba(135, 182, 217, 0.8)"},
-            //  grid: { color: "rgba(135, 182, 217, 0.8)"} 
-            //});
-
-            loadTemperatureGraph();
          });
        });
      }
@@ -811,17 +845,30 @@
         $("#progressbartemp2").progressbar({
            value: 0 
         });
-        //$("#progressbartemp2").css({background: '#aacc33'});
 
         // Progress bar for lounge temperature
         $("#progressbartemp3").progressbar({
            value: 0 
         });
-        //$("#progressbartemp3").css({background: '#aacc33'});
+
+        // Progress bar for lounge temperature
+        $("#progressbartemp4").progressbar({
+           value: 0 
+        });
 
         // Progress bar for humidity
         $("#progressbarhumidity").progressbar({
            value: 10 
+        });
+
+        // Progress bar for humidity
+        $("#progressbarhumidityloft").progressbar({
+           value: 0 
+        });
+
+        // Progress bar for humidity
+        $("#progressbarhumidityhallway").progressbar({
+           value: 0 
         });
 
         // Progressbar
@@ -973,7 +1020,21 @@
           var humidity = d;
           $('#progressbarhumidity').progressbar('option', 'value', parseInt(d));
           $('#humidityamountlabel').html(d);
-          loadsensorstatus();
+        
+          $.get('/humidity3', function(d){
+             var humidity = d;
+             $('#progressbarhumidityloft').progressbar('option', 'value', parseInt(d));
+             $('#humidityloftamountlabel').html(d);
+          
+             $.get('/humidity4', function(d){
+                var humidity = d;
+                $('#progressbarhumidityhallway').progressbar('option', 'value', parseInt(d));
+                $('#humidityhallwayamountlabel').html(d);
+                loadsensorstatus();
+             }, "text");
+
+          }, "text");
+
        }, "text");
      }
 
