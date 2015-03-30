@@ -9,6 +9,7 @@
 #include <LiquidCrystal.h>
 #include <EEPROM.h>
 #include <avr/pgmspace.h>
+#include <utility/w5100.h>
 //#include <PubSubClient.h>
 
 // Comment out to make production build
@@ -74,8 +75,8 @@ prog_char httpResponseString13[] PROGMEM = "<form name=\"form1\" action=\"\" met
 prog_char httpResponseString14[] PROGMEM = "<label for=\"bltimer\">Backlight timer (seconds)</label>";
 prog_char httpResponseString15[] PROGMEM = "<input type=\"text\" name=\"blttimer\" id=\"blttimer\" value=\"";
 prog_char httpResponseString16[] PROGMEM = "\" maxlength=\"2\" size=\"8\"/><p></p>";
-prog_char httpResponseString17[] PROGMEM = "<label for=\"data\">Some other data</label>";
-prog_char httpResponseString18[] PROGMEM = "<input type=\"text\" name=\"data\" id=\"data\" maxlength=\"10\" size=\"10\"/><p></p>";
+prog_char httpResponseString17[] PROGMEM = "<label for=\"data\">HTTP poll rate (seconds)</label>";
+prog_char httpResponseString18[] PROGMEM = "<input type=\"text\" name=\"pollr\" id=\"pollr\" maxlength=\"10\" size=\"10\"/><p></p>";
 prog_char httpResponseString19[] PROGMEM = "<hr align=\"left\" width=\"300\"><p></p>";
 prog_char httpResponseString20[] PROGMEM = "<label for=\"url1\">HTTP data source</label>";
 prog_char httpResponseString21[] PROGMEM = "<input type=\"text\" name=\"url1\" id=\"url1\" value=\"";
@@ -115,8 +116,11 @@ byte serialRXComplete = 1; // RX complete
 byte serialRXCursor = 0;
 byte backlightOn = 0;
 long timeSinceLastLiveConnAttempt = 0;
+byte lastLiveConnWasGood = 0;
 long timeSinceLastHTTPDataCheck = 0;
+byte lastHTTPConnWasGood = 0;
 byte httpDataCheckCount = 0;
+byte httpErrorBasedOnUserData = 0;
 
 /* Structure defining the function a menu item calls */
 struct menuItem {
@@ -281,10 +285,24 @@ void printIPAddress() {
  * Check for data at the HTTP URL specified by the user
  */
 void checkForHTTPData() {
+      
+  byte hasHTTPPrefix = 0;
+  char* startOfIP = NULL;
+  char* indexOfPortColon = NULL;
+  char* indexOfFirstURLSlash = NULL;
+  char* indexOfFirstDot = NULL;
+  char* indexOfSecondDot = NULL;
+  char* indexOfThirdDot = NULL;
+  int port = 80;
+  byte ipAddress[4];
+  //printDebugText("CHECK");
   
   if (timeSinceLastHTTPDataCheck == 0) timeSinceLastHTTPDataCheck = millis();
   
+  
   if ((millis() - timeSinceLastHTTPDataCheck) > 12000) {
+      
+    //printDebugText("CHECK1");
     short bufferSize = 100;
     
     // Buffer for reading strings from flash memory
@@ -293,24 +311,99 @@ void checkForHTTPData() {
     memset(tempBuffer, '\0', bufferSize);
     readProperty("url1", tempBuffer);
     urlDecode(tempBuffer, tempBuffer);
+    Serial.print("Connect to: ");
+    Serial.println(tempBuffer);
+    
+    if (strstr(tempBuffer, "http://") > 0) {
+      hasHTTPPrefix = 1;
+    }
+    
+    if (hasHTTPPrefix) {
+      if (strstr(tempBuffer + 7, "/") > 0) {
+        indexOfFirstURLSlash = strstr(tempBuffer + 7, "/");
+      }
+      if (strstr(tempBuffer + 7, ":") > 0) {
+        indexOfPortColon = strstr(tempBuffer + 7, ":");
+      }
+      startOfIP = tempBuffer + 7;
+    } else {
+      if (strstr(tempBuffer, "/") > 0) {
+        indexOfFirstURLSlash = strstr(tempBuffer, "/");
+      }
+      if (strstr(tempBuffer, ":") > 0) {
+        indexOfPortColon = strstr(tempBuffer, ":");
+      }
+      startOfIP = tempBuffer;
+    }
+    
+    // Find where the IP address delimiters are
+    if (startOfIP > 0) indexOfFirstDot = strstr(startOfIP, ".");
+    if (indexOfFirstDot > 0) indexOfSecondDot = strstr(indexOfFirstDot + 1, ".");
+    if (indexOfSecondDot > 0) indexOfThirdDot = strstr(indexOfSecondDot + 1, ".");
+    
+    if (indexOfFirstDot > 0 && indexOfSecondDot > indexOfFirstDot && indexOfThirdDot > indexOfSecondDot) {
+      char ipString[5] = {NULL};
+      strncpy(ipString, startOfIP, indexOfFirstDot - startOfIP);
+      ipAddress[0] = atoi(ipString);
+      strncpy(ipString, indexOfFirstDot + 1, indexOfSecondDot - indexOfFirstDot + 1);
+      ipAddress[1] = atoi(ipString);
+      strncpy(ipString, indexOfSecondDot + 1, indexOfThirdDot - indexOfSecondDot + 1);
+      ipAddress[2] = atoi(ipString);
+      if (indexOfPortColon > 0) {
+        strncpy(ipString, indexOfThirdDot + 1, indexOfPortColon - indexOfThirdDot + 1);
+      } else if (indexOfFirstURLSlash > 0){
+        strncpy(ipString, indexOfThirdDot + 1, indexOfFirstURLSlash - indexOfThirdDot + 1);
+      } else {
+        strncpy(ipString, indexOfThirdDot + 1, 3);
+      }
+      ipAddress[3] = atoi(ipString);
+    } else {
+      httpErrorBasedOnUserData = 1; // TODO - do something with this value. Print it on the LCD maybe? Include in HTML?
+      return;
+    }
+    
+    Serial.println("IP: ");
+    Serial.println(ipAddress[0]);
+    Serial.println(ipAddress[1]);
+    Serial.println(ipAddress[2]);
+    Serial.println(ipAddress[3]);
+    
+    // Get the port
+    if (indexOfPortColon > 0) {
+      char portString[6];
+      strncpy(portString, indexOfPortColon + 1, indexOfFirstURLSlash == NULL ? strlen(indexOfPortColon + 1) : indexOfFirstURLSlash - indexOfPortColon + 1);
+      port = atoi(portString);
+      //Serial.print("Port: ");
+      //Serial.println(port);
+    }
+    
+    Serial.print("Prefix:");
+    Serial.println(hasHTTPPrefix);
+    Serial.print("Slash:");
+    Serial.println(indexOfFirstURLSlash != NULL);
     
     client.flush();
+      
+    //printDebugText("CHECK2");
     
     if (client.connected()) {
+    
+      //printDebugText("CHECK3");
       while (client.available()) {
         client.read();
       }
     }
     
     client.stop();
+      
+    //printDebugText("CHECK4");
     
-    //int connected = client.connect(tempBuffer, 80); // value of url1 property
-    byte server[] = {192, 168, 0, 2};
-    // TODO - get the server details from the url1 property
-    
-    int connected = client.connect(server, 80); // value of url1 property    
+    int connected = client.connect(ipAddress, port); // value of url1 property    
     
     if (connected) {
+      lastHTTPConnWasGood = 1;
+      //printDebugText("CONN");
+      //Serial.println("Connected!!!");
       httpDataCheckCount++;
       //Serial.print("HTTP data count: " );
       //Serial.println(httpDataCheckCount);
@@ -318,7 +411,7 @@ void checkForHTTPData() {
       strcpy_P(tempBuffer, (char*)pgm_read_word(&(httpStrings[0])));
       
       //client.println(tempBuffer);  // GET / HTTP/1.1
-      client.println("GET /test.pl HTTP/1.0");  // GET / HTTP/1.1
+      client.println("GET / HTTP/1.1");  // GET / HTTP/1.1
       // TODO - get the host location from the url1 property
       
       memset(tempBuffer, '\0', bufferSize);
@@ -333,76 +426,126 @@ void checkForHTTPData() {
       
       int i = 0;
       int totalLength = 0;
+      byte firstNewlineFound = 0;
+      byte startOfbodyFound = 0;
+      byte endOfbodyFound = 0;
       memset(tempBuffer, '\0', bufferSize);
       
       long timeStarted = millis();
       
-      while (millis() - timeStarted < 5000) {
-        while (client.available()) {
+      // Read data from the server for up to 5 seconds, then give up
+      while ((millis() - timeStarted < 2000) && !endOfbodyFound) {
+        while (client.available() && !endOfbodyFound) {
           tempBuffer[i] = client.read();
-          i++;
-          totalLength++;
           
-          if (i == 100) {
-            //Serial.print(tempBuffer);
-            i = 0;
+          if (tempBuffer[i] != '\r') {
+            if (!startOfbodyFound) {
+              if (tempBuffer[i] == '\n') {
+                if (firstNewlineFound) {
+                  // We've read 2 newlines in a row - now we've hit the HTTP body
+                  i = 0;
+                  totalLength = 0;
+                  startOfbodyFound = 1;
+                  firstNewlineFound = 0;  // We'll re-use this
+                  //Serial.println("Body found");
+                } else {
+                  firstNewlineFound = 1;
+                  //Serial.println("First newline");
+                }
+              } else {
+                firstNewlineFound = 0;
+              }
+            } else {
+              if (tempBuffer[i] != '\n') {
+                i++;
+                totalLength++;
+                firstNewlineFound = 0;
+              } else {
+                if (firstNewlineFound) {
+                  // This is the second newline. End of HTTP data received
+                  endOfbodyFound = 1;
+                } else {
+                  firstNewlineFound = 1;
+                }
+              }
+            }
+          
+            if (i == 100) {
+              i = 0;
+            }
           }
         }
       }
       
-      Serial.print("Length of data read: ");
-      Serial.println(totalLength);
-      Serial.println("Last 100 characters: ");
-      byte firstNewlineFound = 0;
+      tempBuffer[i] = '\0';
+      
+      //Serial.print("Length of body read: ");
+      //Serial.println(totalLength);
+      //Serial.println(tempBuffer);
+      //Serial.println("Last 100 characters: ");
       byte realMessageLength = 0;
       
-      // Having read an HTTP response, read backwards from the end of
-      // the HTTP body until we find 2 newline characters in succession.
-      // Remember, we always write into messages[0] to begin with, and then
-      // copy from there into the correct messages slot.
       if (totalLength >= 100) {
+        // TODO - handle the case where the length of the HTTP body is > 100. In this case the start 
+        // of the last 100 bytes could be anywhere in the tempBuffer array. We need to start from
+        // there and wrap back round to the end of the 100 bytes. E.g. start at byte 34 and finish
+        // at byte 33. To begin with we might decide not to support this case.
+        messages[0][62] = '\0';
+      } else {
         int j = 0;
-        for (j = 0; j <= 100; j++) {
-          char nextChar;
-          if (i - j >= 0) {
-            nextChar = tempBuffer[(i-j-1)];
-            
-          } else {
-            nextChar = tempBuffer[(100+(i-j))];
-          }
-          
-          realMessageLength++;
-          
-          if (nextChar == '\n' && firstNewlineFound) {
-            // Found the 2 newline characters together - break
-            break;
-          } else if (nextChar == '\n') {
-            firstNewlineFound = 1;
-          } else if (j > 62) {
-            // Hit the maximum size of a message - stop
-            break;
-          } else {
-            // Copy the next character into the placeholder message array
-            messages[0][63 - j - 1] = nextChar;
-            Serial.print(nextChar);
+        i = 0;
+        for (i = 0; i < totalLength && i < 63; i++) {
+          if (tempBuffer[i] != '\r' && tempBuffer[i] != '\n') {
+            messages[0][j] = tempBuffer[i];
+            j++;
           }
         }
-        Serial.println();
-      } else {
-        // TODO - finish this case, where we've read fewer than 100 characters from the HTTP server
+        messages[0][j] = '\0';
+        messages[0][62] = '\0';
       }
       
-      // TODO - Take the contents of messages[0] and copy it into the next slot. Take into account message ID.
+      Serial.print("Msg: '");
+      Serial.print(messages[0]);
+      Serial.println("'");
       
-      Serial.println();
+      // TODO - Take the contents of messages[0] and copy it into the next slot. Take into account message ID.
+      byte hasMsgID = hasMessageID(messages[0]);
+      Serial.println(hasMsgID);
+      
+      // Do we move the message into a specific slot (based on a message ID), or just the next available one?
+      byte arrayIndexToWriteNewMessage = 0;
+      
+      // Which slot should we write this message into?
+      if (hasMsgID) {
+        // If we have a message with the same message ID, replace that one
+        arrayIndexToWriteNewMessage = findMessageWithID(hasMsgID);
+        Serial.print("Array index: ");
+        Serial.println(arrayIndexToWriteNewMessage);
+      } 
+      
+      // If we haven't got a specific slot to to write the message, put it in the next free slot
+      if (arrayIndexToWriteNewMessage == 0) {
+        arrayIndexToWriteNewMessage = messageReadCursor;
+        messageReadCursor++;
+        if (messageReadCursor > 5) messageReadCursor = 1;
+        if (numberOfMessages < 5) numberOfMessages++;
+      }
+      
+      // Copy from the buffer into the next available slot
+      memcpy(messages[arrayIndexToWriteNewMessage], messages[0], 63);
+      
+      showMessages();
     } else {
-      printDebugText("NOCONN");
+      lastHTTPConnWasGood = 0;
+      //printDebugText("NOCONN");
       // TODO - decide how to show the user that the URL doesn't work
     }
     
     client.stop();
     
     timeSinceLastHTTPDataCheck = millis();
+  } else {
+    //printDebugText("NOCHECKYET");
   }
 }
 
@@ -477,7 +620,7 @@ void pingServer() {
   }
   client.stop();
   
-  timeSinceLastLiveConnAttempt = millis() - 60000;
+  timeSinceLastLiveConnAttempt = millis() - 500000;
 }
 
 /*
@@ -578,35 +721,33 @@ void leftButtonPressed() {
 void (*buttonFunctions[4]) ();
 
 /*
- * On the home screen, display whether or not we have a network connection at the moment
+ * On the home screen, display whether or not we have a network connection at the moment. This
+ * is only updated every 2 minutes to save flashing the screen.
+ * TODO - if either state changes, that would be a good time to update it too.
  */
-void showConnectionState() {
-  lcd.setCursor(16, 0);
-  lcd.print("[");
-  lcd.setCursor(19, 0);
-  lcd.print("]");
-  lcd.setCursor(17, 0);
-  if (client.connected() && ((millis() - timeSinceLastLiveConnAttempt) < 15000)) {
-    //Serial.println("Already connected, no need to do anything");
-  } else {
-    //Serial.println("Not connected, testing the connection properly if it was a while since we last tried");
-    if (millis() - timeSinceLastLiveConnAttempt > 30000) {
-      client.stop();
-      
-      char tempBuffer[20];
-      strcpy_P(tempBuffer, (char*)pgm_read_word(&(httpStrings[3])));  // Copy "www.google.com" out of flash strings
-      client.connect(tempBuffer, 80); // Connects to www.google.com, and returns 1 for success
-      timeSinceLastLiveConnAttempt = millis();
+void checkNetworkConnectionState() {
+  if ((millis() - timeSinceLastLiveConnAttempt) > 120000) {
+    // We need to fill in at chars 13/14 and 17/18 to show connection state
+    if (client.connected() && ((millis() - timeSinceLastLiveConnAttempt) < 15000)) {
+      //Serial.println("Already connected, no need to do anything");
     } else {
-      //Serial.println("Not retrying yet - too frequent");
+      //Serial.println("Not connected, testing the connection properly if it was a while since we last tried");
+      if (millis() - timeSinceLastLiveConnAttempt > 30000) {
+        client.stop();
+        
+        char tempBuffer[20];
+        strcpy_P(tempBuffer, (char*)pgm_read_word(&(httpStrings[3])));  // Copy "www.google.com" out of flash strings
+        client.connect(tempBuffer, 80); // Connects to www.google.com, and returns 1 for success
+        timeSinceLastLiveConnAttempt = millis();
+        if (client.connected()) {
+          lastLiveConnWasGood = 1;
+        } else {
+          lastLiveConnWasGood = 0;
+        }
+      } else {
+        //Serial.println("Not retrying yet - too frequent");
+      }
     }
-  }
-  
-  if (client.connected()) {
-    lcd.print((char)127);
-    lcd.print((char)126);
-  } else {
-    lcd.print("  ");
   }
 }
 
@@ -614,6 +755,9 @@ void showConnectionState() {
  * Display the message at the current cursor on screen
  */
 void showMessages() {
+  
+  checkNetworkConnectionState();
+  
   char messageTitle[21];
   messageTitle[20] = '\0';
   
@@ -623,14 +767,14 @@ void showMessages() {
   lcd.clear();
   lcd.setCursor(0, 0);
   
-  sprintf(messageTitle, "Msgs (%d/%d)", messageCursor, numberOfMessages);
+  sprintf(messageTitle, "Msgs (%d/%d)  [%c%c][%c%c]", messageCursor, numberOfMessages, 
+                                                  lastHTTPConnWasGood ? (char)127 : ' ', lastHTTPConnWasGood ? (char)126 : ' ',
+                                                  lastLiveConnWasGood ? (char)127 : ' ', lastLiveConnWasGood ? (char)126 : ' ');
   lcd.print(messageTitle);
   
   if (numberOfMessages > 0) {
     printText(messages[messageCursor]);
   }
-  
-  showConnectionState();
 }
 
 /*
@@ -1263,6 +1407,11 @@ void setup() {
     lcd.print("OK");
     lcd.setCursor(0, 2);
     printIPAddress();
+    
+    // Limit the client connect timeout to a couple of seconds
+    W5100.setRetransmissionTime(0x07D0);
+    W5100.setRetransmissionCount(3);
+    
     delay(4000);
   }
   
@@ -1273,7 +1422,7 @@ void setup() {
   }
 #endif
   
-  timeSinceLastLiveConnAttempt = millis() - 60000;
+  timeSinceLastLiveConnAttempt = millis() - 500000;
   
   showMessages();
 }
