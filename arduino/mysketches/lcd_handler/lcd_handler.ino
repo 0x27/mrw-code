@@ -10,7 +10,6 @@
 #include <EEPROM.h>
 #include <avr/pgmspace.h>
 #include <utility/w5100.h>
-//#include <PubSubClient.h>
 
 // Comment out to make production build
 #define DEV
