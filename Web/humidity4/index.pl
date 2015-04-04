@@ -9,9 +9,9 @@ my $mqtt = MQTT::Client->new({
    callback_publish => \&publish_callback
 });
 
-# To perform a 'one-shot' subscribe to a topic:
+# To perform a 'one-shot' publish to a topic:
 $mqtt->connect();
-$mqtt->subscribe("local/rfm12/nodes/02/temp",0);
+$mqtt->subscribe("local/nest/hallway/humidity",0);
 $listener = Thread->new(\&thread1);
 
 sub thread1 {
@@ -26,6 +26,7 @@ sleep(1);
 print "0";
 sleep(1);
 exit 0;
+
 
 sub publish_callback {
    my $topic = shift;
