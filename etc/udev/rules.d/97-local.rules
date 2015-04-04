@@ -1,0 +1,7 @@
+# The rule that detects the CurrentCost reader and creates a symlink
+#KERNEL=="ttyUSB*", SYSFS{idVendor}=="067b", SYSFS{idProduct}=="2303",SYMLINK="ttyUSBCC"
+# The rule that detects the 434MHz RF Arduino and creates a symlink
+KERNEL=="ttyUSB*", ATTRS{idVendor}=="0403", ATTRS{idProduct}=="6001",ATTRS{serial}=="A900XUGK", SYMLINK="ttyUSBRFM"
+# The rule that detects the Gas Monitor device and creates a symlink
+KERNEL=="ttyUSB*", ATTRS{idVendor}=="0403", ATTRS{idProduct}=="6001",ATTRS{serial}=="AM01SK44", SYMLINK="ttyUSBGAS"
+
