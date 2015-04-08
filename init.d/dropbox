@@ -1,0 +1,49 @@
+#!/bin/sh
+#dropbox service
+DROPBOX_USERS="mwhitehead"
+ 
+DAEMON=/home/mwhitehead/mrw-code/opt/dropboxuploader/utils/dropbox.py
+ 
+start() {
+   echo "Starting dropbox..."
+   for dbuser in $DROPBOX_USERS; do
+       su $dbuser -c '/home/mwhitehead/mrw-code/opt/dropboxuploader/utils/dropbox.py start'
+   done
+}
+ 
+stop() {
+   echo "Stopping dropbox..."
+   for dbuser in $DROPBOX_USERS; do
+       su $dbuser -c '/home/mwhitehead/mrw-code/opt/dropboxuploader/utils/dropbox.py stop'
+   done
+}
+ 
+status() {
+   for dbuser in $DROPBOX_USERS; do
+       su $dbuser -c '/home/mwhitehead/mrw-code/opt/dropboxuploader/utils/dropbox.py status'
+   done
+}
+ 
+case "$1" in
+ 
+   start)
+       start
+       ;;
+   stop)
+       stop
+       ;;
+   restart|reload|force-reload)
+       stop
+       start
+       ;;
+   status)
+       status
+       ;;
+   *)
+       echo "Usage: /etc/init.d/dropbox {start|stop|reload|force-reload|restart|status}"
+       exit 1
+ 
+esac
+ 
+exit 0
+
