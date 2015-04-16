@@ -73,7 +73,7 @@ Nicholas O'Leary - nick_oleary@uk.ibm.com
 
 use MQTT::Socket;
 use MQTT::Utils;
-use Devel::Leak;
+#use Devel::Leak;
 
 our @ISA = ();
 our $VERSION   = 0.1;
