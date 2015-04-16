@@ -43,25 +43,20 @@
                     sensorVoltages[2].push([$timestamp, $voltage]);
                  });
 
-
-            if (sensorVoltages[0].length > 0 &&
-                sensorVoltages[1].length > 0 &&
-                sensorVoltages[2].length > 0) {
-
-          $.plot($("#thegraph"), [
-            { data: sensorVoltages[0],
+           $.plot($("#thegraph"), [
+           { data: sensorVoltages[0],
               points: {show: false},
               lines: {show: true},
-              label: "Loft"},
+              label: "Lf"},
             { data: sensorVoltages[1],
               points: {show: false},
               lines: {show: true},
-              label: "Lounge",
+              label: "Lg",
               color: "rgba(195, 110, 50, 1.4)"},
             { data: sensorVoltages[2],
               points: {show: false},
               lines: {show: true},
-              label: "Garden",
+              label: "G",
               color: "rgba(110, 180, 30, 1.4)"}
             ],
           {
@@ -71,8 +66,6 @@
             series: { points: {show: false}, lines: {show:true}, color: "rgba(135, 182, 217, 0.8)"},
             grid: { color: "rgba(135, 182, 217, 0.8)"}
           });
-       }
-
          });
        });
        });

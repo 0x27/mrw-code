@@ -1,6 +1,7 @@
 npm/
 npm-cli.js
-mpd*
+mpd-*
+mpd_*
 cross-compiled*
 slug/
 windows/

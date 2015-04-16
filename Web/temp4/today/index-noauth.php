@@ -19,7 +19,7 @@ if (strlen($specifiedDaysOld) > 0)
    $daysOld = $specifiedDaysOld;
 }
 
-$result = mysql_query("SELECT unix_timestamp(timestamp),temperature FROM temperature3 WHERE timestamp between date_sub(curdate(), INTERVAL " . $daysOld . " DAY) AND date_sub(curdate(), INTERVAL " . ($daysOld - 1) . " DAY) order by timestamp")or die(mysql_error());
+$result = mysql_query("SELECT unix_timestamp(timestamp),temperature FROM temperature4 WHERE timestamp between date_sub(curdate(), INTERVAL " . $daysOld . " DAY) AND date_sub(curdate(), INTERVAL " . ($daysOld - 1) . " DAY) order by timestamp")or die(mysql_error());
 
 while($row = mysql_fetch_array($result))
   {
