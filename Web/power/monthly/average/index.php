@@ -3,7 +3,7 @@
 <result>
 
 <?php
-$con = mysql_connect("localhost","cc");
+$con = mysql_connect("localhost","lighttpd");
 if (!$con)
 {
   die('Could not connect: ' . mysql_error());

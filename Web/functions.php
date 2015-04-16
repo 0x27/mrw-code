@@ -32,11 +32,7 @@
 
      function plotTempGraph() {
 
-       // Only plot the graph if both arrays of data exist
-       if (indoorTempsToday.length > 0 && 
-           loftTempsToday.length > 0 && 
-           loungeTempsToday.length > 0 &&
-           hallwayTempsToday.length > 0) {
+       if (true) {
 
          // Add a new data point to the end of which ever data set needs it, to make 
          // sure both graph plots have a data point at the same final timestamp
@@ -135,18 +131,18 @@
          
            $.get('/temp2/today?daysold=' + tempGraphDaysOffset, function(e){
              $(e).find('nextrow').each(function(){ 
-             var $record = $(this);     
-             var $timestamp = $record.find('timestamp').text() * 1000;
-             var $temperature = $record.find('temperature').text();
-             loftTempsToday.push([$timestamp, $temperature]);
+               var $record = $(this);     
+               var $timestamp = $record.find('timestamp').text() * 1000;
+               var $temperature = $record.find('temperature').text();
+               loftTempsToday.push([$timestamp, $temperature]);
              });
             
              $.get('/temp3/today?daysold=' + tempGraphDaysOffset, function(e){
                 $(e).find('nextrow').each(function(){ 
-                var $record = $(this);     
-                var $timestamp = $record.find('timestamp').text() * 1000;
-                var $temperature = $record.find('temperature').text();
-                loungeTempsToday.push([$timestamp, $temperature]);
+                  var $record = $(this);     
+                  var $timestamp = $record.find('timestamp').text() * 1000;
+                  var $temperature = $record.find('temperature').text();
+                  loungeTempsToday.push([$timestamp, $temperature]);
                 });
 
                 $.get('/temp4/today?daysold=' + tempGraphDaysOffset, function(e){
@@ -291,10 +287,7 @@
      }
 
      function plotVoltageGraph() {
-       if (sensorVoltages[0].length > 0 && 
-           sensorVoltages[1].length > 0 &&
-           sensorVoltages[2].length > 0 ) {
-
+       if (true) {
           $.plot($("#voltagegraph"), [ 
             { data: sensorVoltages[0],
               points: {show: false},

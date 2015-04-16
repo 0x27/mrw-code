@@ -1,12 +1,11 @@
 #!/usr/bin/perl
-use lib '/home/mwhitehead/Web/apps/mqtt-perl/';
+use lib '/home/mwhitehead/mrw-code/Web/apps/mqtt-perl/';
 use MQTT::Client;
 use Thread;
 use threads::shared;
 
 my $mqtt = MQTT::Client->new({
    brokerIP => "localhost",
-#   clientID => "websiteclient9",
    callback_publish => \&publish_callback
 });
 
