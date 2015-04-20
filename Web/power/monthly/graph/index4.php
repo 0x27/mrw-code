@@ -7,11 +7,16 @@
 
    <!--  Load the jquery javascript code  -->
 
-   <link type="text/css" href="css/redmond/jquery-ui-1.7.2.custom.css" rel="stylesheet" />
-   <script src="/js/jquery-1.3.2.min.js" type="text/javascript"></script>
-   <script src="/js/jquery-ui-1.7.2.custom.min.js" type="text/javascript"></script>
-   <!--<script language="javascript" type="text/javascript" src="jquery/flot/jquery.js"></script>-->
-   <script language="javascript" type="text/javascript" src="/jquery/flot/jquery.flot.js"></script>
+   <script src="/js/jquery-1.11.2.min.js" type="text/javascript"></script>
+   <!--<script src="/js/jquery-ui-1.7.2.custom.min.js" type="text/javascript"></script>-->
+   <script src="/js/jquery-ui-1.11.4.custom/jquery-ui.min.js" type="text/javascript"></script>
+   <!--<script language="javascript" type="text/javascript" src="/jquery/flot/jquery.flot.js"></script>-->
+   <script language="javascript" type="text/javascript" src="/js/flot/jquery.flot.js"></script>
+   <script language="javascript" type="text/javascript" src="/js/flot/jquery.flot.time.min.js"></script>
+   <script language="javascript" type="text/javascript" src="/js/flot/jquery.flot.selection.min.js"></script>
+   <script language="javascript" type="text/javascript" src="/js/flot/jquery.flot.navigate.min.js"></script>
+   <script language="javascript" type="text/javascript" src="/js/flot/jquery.flot.canvas.min.js"></script>
+   <script language="javascript" type="text/javascript" src="/js/flot/jquery.flot.crosshair.min.js"></script>
 
   <!--  jquery code to create the graph  -->
   <script id="source" language="javascript" type="text/javascript">
@@ -34,9 +39,16 @@
        $.plot($("#thegraph"),
            [{
              data: powerToday,
+             clickable: true,
              bars: {show: true},
              points: {show:false},
-             lines: {show:false}
+             lines: {show:false},
+             zoom: { 
+               interactive: true 
+             }, 
+             pan: { 
+               interactive: true 
+             } 
             },
             {
              data: lowPowerNatAvg,
@@ -65,9 +77,23 @@
             {
              xaxis: {mode: "time"},
              series: { points: {show: false}, lines: {show:true}, color: "rgba(135, 182, 217, 0.8)"},
-             grid: { color: "rgba(135, 182, 217, 0.8)"}
+             grid: { color: "rgba(135, 182, 217, 0.8)", clickable: true},
+             //selection: {
+	//			mode: "xy"
+	//		},
+             clickable: true,
+             zoom: { interactive: true },
+             pan: { interactive: true }
             }
           );
+       });
+
+       $("#thegraph").bind("plotclick", function (event, pos, item) {
+         console.log("Clicked");
+       });
+       $("#thegraph").bind("plotselected", function (event, ranges) {
+         console.log("Clicked");
+         alert('Hi2');
        });
      }
   </script>

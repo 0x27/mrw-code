@@ -9,11 +9,14 @@
    <!--  Load the jquery javascript code  -->
 
    <link type="text/css" href="css/redmond/jquery-ui-1.7.2.custom.css" rel="stylesheet" />	
-   <!--<script src="js/jquery-1.3.2.min.js" type="text/javascript"></script>-->
-   <script src="js/jquery-1.10.2.min.js" type="text/javascript"></script>
-   <!--<script src="js/jquery-ui-1.7.2.custom.min.js" type="text/javascript"></script>-->
-   <script src="js/jquery-ui.min.js" type="text/javascript"></script>
-   <!--<script language="javascript" type="text/javascript" src="jquery/flot/jquery.js"></script>-->
+   <script src="/js/jquery-1.11.2.min.js" type="text/javascript"></script>
+   <script src="/js/jquery-ui-1.11.4.custom/jquery-ui.min.js" type="text/javascript"></script>
+   <script language="javascript" type="text/javascript" src="/js/flot/jquery.flot.js"></script>
+   <script language="javascript" type="text/javascript" src="/js/flot/jquery.flot.time.min.js"></script>
+   <script language="javascript" type="text/javascript" src="/js/flot/jquery.flot.selection.min.js"></script>
+   <script language="javascript" type="text/javascript" src="/js/flot/jquery.flot.navigate.min.js"></script>
+   <script language="javascript" type="text/javascript" src="/js/flot/jquery.flot.canvas.min.js"></script>
+   <script language="javascript" type="text/javascript" src="/js/flot/jquery.flot.crosshair.min.js"></script>
    <script language="javascript" type="text/javascript" src="jquery/flot07/jquery.flot.js"></script>
  
    <!--  Include all of the JavaScript functions  -->
@@ -194,7 +197,7 @@
                           <div><span>Lounge Temperature</span><span> - </span><span id="temp3amountlabel">0</span><span> degrees</span></div>
                           <div class="medium-progress-bar" id="progressbartemp3"></div>
 
-                          <div class="vertical-spacer"></div>
+                          <div class="vertical-spacer-medium"></div>
 
                           <div><span>Hallway Temperature</span><span> - </span><span id="temp4amountlabel">0</span><span> degrees</span></div>
                           <div class="medium-progress-bar" id="progressbartemp4"></div>

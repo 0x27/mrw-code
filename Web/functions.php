@@ -21,6 +21,7 @@
      var loftTempsToday = [];
      var loungeTempsToday = [];
      var hallwayTempsToday = [];
+     var gardenTempsToday = [];
  
      var sensorVoltages = [];
 
@@ -97,10 +98,15 @@
            points: {show: false}, 
            lines: {show: true}, 
            color: "rgba(215, 150, 70, 1.4)",
-           label: "Hallway"}
+           label: "Hallway"},
+         { data: gardenTempsToday,
+           points: {show: false}, 
+           lines: {show: true}, 
+           color: "rgba(205, 60, 120, 1.4)",
+           label: "Garden"}
          ], 
          {
-           legend: { position: "ne", noColumns: 4, margin: 4 },
+           legend: { position: "ne", noColumns: 5, margin: 4 },
            xaxis: { mode: "time" },
            yaxis: { max: xRange },
            series: { points: {show: true}, lines: {show:true}, color: "rgba(135, 182, 217, 0.8)"},
@@ -115,6 +121,7 @@
        loftTempsToday = [];
        loungeTempsToday = [];
        hallwayTempsToday = [];
+       gardenTempsToday = [];
 
        // Only load the graphs once per load of the website
        //if (indoorTempsToday.length == 0 && 
@@ -152,8 +159,17 @@
                       var $temperature = $record.find('temperature').text();
                       hallwayTempsToday.push([$timestamp, $temperature]);
                    });
+                
+                   $.get('/temp5/today?daysold=' + tempGraphDaysOffset, function(e){
+                      $(e).find('nextrow').each(function(){ 
+                         var $record = $(this);     
+                         var $timestamp = $record.find('timestamp').text() * 1000;
+                         var $temperature = $record.find('temperature').text();
+                         gardenTempsToday.push([$timestamp, $temperature]);
+                      });
 
-                   plotTempGraph();
+                      plotTempGraph();
+                   });
                 });
              });
            });
@@ -216,7 +232,10 @@
           $.plot($("#solargraph"), [ solarToday ], {
             xaxis: {mode: "time"},
             series: { points: {show: false}, lines: {show:true}, color: "rgba(135, 182, 217, 0.8)"},
-            grid: { color: "rgba(135, 182, 217, 0.8)"} 
+            grid: { color: "rgba(135, 182, 217, 0.8)", clickable: true}, 
+            clickable: true,
+            zoom: { interactive: true },
+            pan: { interactive: true }
           });
 
           loadAnnualSolarGraph();
@@ -239,12 +258,23 @@
              data: solarAnnual,
              bars: {show: true},
              points: {show:false},
-             lines: {show:false}
+             lines: {show:false},
+             clickable: true,
+             zoom: {
+               interactive: true
+             },
+             pan: {
+               interactive: true
+             }
             }],
             {
              xaxis: {mode: "time"},
              series: { points: {show: false}, lines: {show:true}, color: "rgba(40, 230, 30, 0.8)"},
-             grid: { color: "rgba(135, 182, 217, 0.8)"}
+             grid: { color: "rgba(135, 182, 217, 0.8)", clickable: true},
+             clickable: true,
+             zoom: { interactive: true },
+             pan: { interactive: true }
+
             }
           );
 
@@ -351,6 +381,16 @@
                   humidityToday[2].push([$timestamp, $humidity]);
                });
 
+               $.get('/humidity5/today', function(d){
+                  humidityToday[3] = [];
+
+                  $(d).find('nextrow').each(function(){ 
+                     var $record = $(this);     
+                     var $timestamp = $record.find('timestamp').text() * 1000;
+                     var $humidity = $record.find('humidity').text();
+                     humidityToday[3].push([$timestamp, $humidity]);
+                  });
+
                $.plot($("#humiditygraph"), [
                   { data: humidityToday[0],
                     points: {show: false}, 
@@ -364,11 +404,16 @@
                   { data: humidityToday[2],
                     points: {show: false}, 
                     lines: {show: true}, 
-                    color: "rgba(150, 190, 50, 1.4)",
-                    label: "Hallway"}
+                    color: "rgba(215, 150, 70, 1.4)",
+                    label: "Hallway"},
+                  { data: humidityToday[3],
+                    points: {show: false}, 
+                    lines: {show: true}, 
+                    color: "rgba(205, 60, 120, 1.4)",
+                    label: "Garden"}
                ], 
                {
-                  legend: { position: "ne", noColumns: 3, margin: 4 },
+                  legend: { position: "ne", noColumns: 4, margin: 4 },
                   xaxis: { mode: "time" },
                   yaxis: { max: 100 },
                   series: { points: {show: true}, lines: {show:true}, color: "rgba(135, 182, 217, 0.8)"},
@@ -376,6 +421,7 @@
                });
 
                loadTemperatureGraph();
+               });
             });
          });
        });
@@ -978,18 +1024,26 @@
           if (d > currentTemperature)  {
              currentTemperature = d;
           }
-          loadhumidity();
        }, "text");
 
        $.get('/temp2', function(e){
           $('#progressbartemp2').progressbar('option', 'value', (e / 50 * 100));
           $('#temp2amountlabel').html(e);
+
+          $.get('/temp3', function(e){
+             $('#progressbartemp3').progressbar('option', 'value', (e / 50 * 100));
+             $('#temp3amountlabel').html(e);
+
+             $.get('/temp4', function(e){
+                $('#progressbartemp4').progressbar('option', 'value', (e / 50 * 100));
+                $('#temp4amountlabel').html(e);
+
+                loadhumidity();
+             }, "text");
+          }, "text");
        }, "text");
 
-       $.get('/temp3', function(e){
-          $('#progressbartemp3').progressbar('option', 'value', (e / 50 * 100));
-          $('#temp3amountlabel').html(e);
-       }, "text");
+
      }
 
      function loadgas()

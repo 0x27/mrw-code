@@ -25,9 +25,12 @@ $queryString = "SELECT unix_timestamp(timestamp),voltage FROM wirelessnodes WHER
 
 $result = mysql_query($queryString) or die(mysql_error());
 
+$nRows = 0;
+
 while($row = mysql_fetch_array($result))
 {
-  if (strlen($row['voltage']) > 0)
+  $nRows++;
+  if ($nRows == 6 && strlen($row['voltage']) > 0)
   {
     echo "<nextrow>";
     echo "<timestamp>";
@@ -37,6 +40,7 @@ while($row = mysql_fetch_array($result))
     echo $row['voltage'] / 10;
     echo "</voltage>";
     echo "</nextrow>";
+    $nRows = 0;
   }
 }
 
