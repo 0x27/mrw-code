@@ -7,8 +7,7 @@
 
 PID=$(pidof node-red)
 if [ "$PID" != "" ]; then
-    echo "MRW: Node-Red already running so not starting." >>/tmp/nodered.log
-    echo "MRW: Node-Red already running so not starting."
+    echo "Nothing to do" >/dev/null
 else
     echo "MRW: Node-Red isn't running. Restarting..." >>/tmp/nodered.log
     sleep 1
