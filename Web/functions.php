@@ -26,6 +26,7 @@
      var sensorVoltages = [];
 
      var currentTemperature = 0;
+     var maxTemperatureFromAllSensors = 0;
 
      // Specify 1 for yesterday's data, 2 for
      // the day before that, etc.
@@ -58,26 +59,46 @@
             if (parseInt(indoorTempsToday[i][1]) > parseInt(currentTemperature)) { 
                currentTemperature = parseInt(indoorTempsToday[i][1]);
             }
+            if (parseInt(indoorTempsToday[i][1]) > parseInt(maxTemperatureFromAllSensors)) { 
+               maxTemperatureFromAllSensors = parseInt(indoorTempsToday[i][1]);
+            }
          }
          for (i = 0; i < loftTempsToday.length; i++) {
             if (parseInt(loftTempsToday[i][1]) > parseInt(currentTemperature)) {
                currentTemperature = parseInt(loftTempsToday[i][1]);
+            }
+            if (parseInt(loftTempsToday[i][1]) > parseInt(maxTemperatureFromAllSensors)) {
+               maxTemperatureFromAllSensors = parseInt(loftTempsToday[i][1]);
             }
          }
          for (i = 0; i < loungeTempsToday.length; i++) {
             if (parseInt(loungeTempsToday[i][1]) > parseInt(currentTemperature)) {
                currentTemperature = parseInt(loungeTempsToday[i][1]);
             }
+            if (parseInt(loungeTempsToday[i][1]) > parseInt(maxTemperatureFromAllSensors)) {
+               maxTemperatureFromAllSensors = parseInt(loungeTempsToday[i][1]);
+            }
          }
          for (i = 0; i < hallwayTempsToday.length; i++) {
             if (parseInt(hallwayTempsToday[i][1]) > parseInt(currentTemperature)) {
                currentTemperature = parseInt(hallwayTempsToday[i][1]);
             }
+            if (parseInt(hallwayTempsToday[i][1]) > parseInt(maxTemperatureFromAllSensors)) {
+               maxTemperatureFromAllSensors = parseInt(hallwayTempsToday[i][1]);
+            }
+         }
+         for (i = 0; i < gardenTempsToday.length; i++) {
+            if (parseInt(gardenTempsToday[i][1]) > parseInt(currentTemperature)) {
+               currentTemperature = parseInt(gardenTempsToday[i][1]);
+            }
+            if (parseInt(gardenTempsToday[i][1]) > parseInt(maxTemperatureFromAllSensors)) {
+               maxTemperatureFromAllSensors = parseInt(gardenTempsToday[i][1]);
+            }
          }
 
          // Add 5 degrees to the current maximum so the graph is scaled sensibly (and
          // more importantly make sure the labels don't overlap the data)
-         var xRange = 5 + parseInt(currentTemperature);
+         var xRange = 5 + parseInt(maxTemperatureFromAllSensors);
 
          $.plot($("#temperaturegraph"), [
          { data: indoorTempsToday,
@@ -392,15 +413,16 @@
                   });
 
                $.plot($("#humiditygraph"), [
-                  { data: humidityToday[0],
-                    points: {show: false}, 
-                    lines: {show: true},
-                    label: "Lounge"},
                   { data: humidityToday[1],
                     points: {show: false}, 
-                    lines: {show: true}, 
+                    lines: {show: true},
                     color: "rgba(110, 180, 30, 1.4)",
                     label: "Loft"},
+                  { data: humidityToday[0],
+                    points: {show: false}, 
+                    lines: {show: true}, 
+                    color: "rgba(195, 110, 50, 1.4)",
+                    label: "Lounge"},
                   { data: humidityToday[2],
                     points: {show: false}, 
                     lines: {show: true}, 
@@ -815,10 +837,10 @@
               loadGasGraph();
               gasGraphsLoaded = true;
             }
-            else if ( $(ui.newTab).html().indexOf("Garden") != -1 && !gardenGraphsLoaded ){ 
-              loadSoilMoistureGraph();
-              gardenGraphsLoaded = true;
-            }
+            //else if ( $(ui.newTab).html().indexOf("Garden") != -1 && !gardenGraphsLoaded ){ 
+            //  loadSoilMoistureGraph();
+             // gardenGraphsLoaded = true;
+            //}
             else if ( $(ui.newTab).html().indexOf("Status") != -1 && !voltageGraphsLoaded ){ 
               loadVoltageGraph();
               voltageGraphsLoaded = true;
@@ -978,20 +1000,7 @@
        
        loadmusiclist();
        
-       //loadhousedata();
-       
        loadartists();
-
-       //loadpower();
-
-       //loadtemp();
-
-       //loadgas();
-
-       //loadhumidity();
-   
-       //loadsensorstatus();
-
      });
 
      var powerLoading = false;
@@ -1000,50 +1009,59 @@
         if (!powerLoading) {
           powerLoading = true;
           // Change e.g. 0.28 kw into a percentage of 3000 watts
-          $.get('/power', function(d){
+          $.get('/power', function(d, status){
             $('#progressbarenergy').progressbar('option', 'value', ((d * 1000) / 2000 * 100));
             $('#energyamountlabel').html(d * 1000);
-            loadhousedata();
 
             // Change the watts into a percentage of 200 watts
-            $.get('/power/solar', function(d){
-              $('#progressbarsolar').progressbar('option', 'value', ((d  / 200) * 100));
-              $('#solaramountlabel').html(d);
-              loadhousedata();
+            $.get('/power/solar', function(d, status){
+              if (status === 'success') {
+                 $('#progressbarsolar').progressbar('option', 'value', ((d  / 200) * 100));
+                 $('#solaramountlabel').html(d);
+                 powerLoading = false;
+                 loadhousedata();
+              }
               powerLoading = false;
             }, "text");
           }, "text");
         }
      }
 
+     var loadedTemperatures = false;
      function loadtemp()
      {
-        $.get('/temp', function(d){
-          $('#progressbartemp').progressbar('option', 'value', (d / 50 * 100));
-          $('#tempamountlabel').html(d);
-          if (d > currentTemperature)  {
-             currentTemperature = d;
-          }
-       }, "text");
+       if (!loadedTemperatures) {
+          loadedTemperatures = true;
+       
+          $.get('/temp', function(d, status){
+             if (status !== 'success') loadedTemperatures = false;
+             $('#progressbartemp').progressbar('option', 'value', (d / 50 * 100));
+             $('#tempamountlabel').html(d);
+             if (d > currentTemperature)  {
+                currentTemperature = d;
+             }
 
-       $.get('/temp2', function(e){
-          $('#progressbartemp2').progressbar('option', 'value', (e / 50 * 100));
-          $('#temp2amountlabel').html(e);
+             $.get('/temp2', function(d, status){
+                if (status !== 'success') loadedTemperatures = false;
+                $('#progressbartemp2').progressbar('option', 'value', (d / 50 * 100));
+                $('#temp2amountlabel').html(d);
 
-          $.get('/temp3', function(e){
-             $('#progressbartemp3').progressbar('option', 'value', (e / 50 * 100));
-             $('#temp3amountlabel').html(e);
+                $.get('/temp3', function(d, status){
+                   if (status !== 'success') loadedTemperatures = false;
+                   $('#progressbartemp3').progressbar('option', 'value', (d / 50 * 100));
+                   $('#temp3amountlabel').html(d);
 
-             $.get('/temp4', function(e){
-                $('#progressbartemp4').progressbar('option', 'value', (e / 50 * 100));
-                $('#temp4amountlabel').html(e);
+                   $.get('/temp4', function(d, status){
+                      if (status !== 'success') loadedTemperatures = false;
+                      $('#progressbartemp4').progressbar('option', 'value', (d / 50 * 100));
+                      $('#temp4amountlabel').html(d);
 
-                loadhumidity();
+                      loadhumidity();
+                   }, "text");
+                }, "text");
              }, "text");
           }, "text");
-       }, "text");
-
-
+       }
      }
 
      function loadgas()
@@ -1061,28 +1079,35 @@
        }, "text");
      }
 
+     var loadedHumidity = false;
      function loadhumidity()
      {
-        $.get('/humidity2', function(d){
-          var humidity = d;
-          $('#progressbarhumidity').progressbar('option', 'value', parseInt(d));
-          $('#humidityamountlabel').html(d);
+        if (!loadedHumidity) {
+           loadedHumidity = true;
+
+           $.get('/humidity2', function(d, status){
+              if (status !== 'success') loadedHumidity = false;
+              var humidity = d;
+              $('#progressbarhumidity').progressbar('option', 'value', parseInt(d));
+              $('#humidityamountlabel').html(d);
         
-          $.get('/humidity3', function(d){
-             var humidity = d;
-             $('#progressbarhumidityloft').progressbar('option', 'value', parseInt(d));
-             $('#humidityloftamountlabel').html(d);
+              $.get('/humidity3', function(d, status){
+                 if (status !== 'success') loadedHumidity = false;
+                 var humidity = d;
+                 $('#progressbarhumidityloft').progressbar('option', 'value', parseInt(d));
+                 $('#humidityloftamountlabel').html(d);
           
-             $.get('/humidity4', function(d){
-                var humidity = d;
-                $('#progressbarhumidityhallway').progressbar('option', 'value', parseInt(d));
-                $('#humidityhallwayamountlabel').html(d);
-                loadsensorstatus();
-             }, "text");
+                 $.get('/humidity4', function(d, status){
+                    if (status !== 'success') loadedHumidity = false;
+                    var humidity = d;
+                    $('#progressbarhumidityhallway').progressbar('option', 'value', parseInt(d));
+                    $('#humidityhallwayamountlabel').html(d);
 
-          }, "text");
-
-       }, "text");
+                    loadsensorstatus();
+                 }, "text");
+              }, "text");
+           }, "text");
+        }
      }
 
      function loadsensorstatus()
@@ -1334,9 +1359,11 @@
  
           loadpower();
 
-          //loadhousedata();
+          // Only does anything if one of the calls in loadtemp() failed and needs redoing
+          loadtemp();
 
-          //loadgas();
+          // Only does anything if one of the calls in loadhumidity() failed and needs redoing
+          loadhumidity();
        });
     }
 

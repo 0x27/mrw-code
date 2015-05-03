@@ -72,7 +72,7 @@
 	<li><a href="#tabs-2">Electricity</a></li>
         <li><a href="#tabs-5">Gas</a></li>
         <li><a href="#tabs-3">Temp & Humidity</a></li>
-        <li><a href="#tabs-6">Garden</a></li>
+        <!--<li><a href="#tabs-6">Garden</a></li>-->
         <li><a href="#tabs-4">Status</a></li>
      </ul>
 			<div id="tabs-1" style="position: relative; height: 100%">
@@ -229,11 +229,11 @@
 
                           <div><span>Lounge Humidity</span><span> - </span><span id="humidityamountlabel">0</span><span> %</span></div>
                           <div class="medium-progress-bar" id="progressbarhumidity" name="progressbarhumidity"></div>
-                          <div class="vertical-spacer"></div>
+                          <div class="vertical-spacer-medium"></div>
 
                           <div><span>Loft Humidity</span><span> - </span><span id="humidityloftamountlabel">0</span><span> %</span></div>
                           <div class="medium-progress-bar" id="progressbarhumidityloft" name="progressbarhumidityloft"></div>
-                          <div class="vertical-spacer"></div>
+                          <div class="vertical-spacer-medium"></div>
 
                           <div><span>Hallway Humidity</span><span> - </span><span id="humidityhallwayamountlabel">0</span><span> %</span></div>
                           <div class="medium-progress-bar" id="progressbarhumidityhallway" name="progressbarhumidityhallway"></div>
@@ -249,7 +249,7 @@
                           <div class="vertical-spacer"></div>
 
                         </div>
-                        <div id="tabs-6">
+                        <!--<div id="tabs-6">
                           <div><span>Soil Water Content</span></div>
 
                           <div class="vertical-spacer-medium"></div>
@@ -257,7 +257,7 @@
                           <div id="soilmoisturegraph" style="width:600px;height:300px;">
                              <img width="30" src="ajax-loader.gif"/>
                           </div>
-                        </div>
+                        </div>-->
                         <div id="tabs-4">
                            <div id="statussystemtime" name="statussystemtime">System time: </div>
                            <div id="statusuptime" name="statusuptime">Uptime: </div>
