@@ -39,7 +39,7 @@ module.exports = {
     debugMaxLength: 1000,
 
     // The file containing the flows. If not set, it defaults to flows_<hostname>.json
-    flowFile: 'production-flow.js',
+    flowFile: '/home/mwhitehead/mrw-code/production-flow.js',
 
     // By default, all user data is stored in the Node-RED install directory. To
     // use a different location, the following property can be used
