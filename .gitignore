@@ -1,3 +1,4 @@
+opt/node_modules
 npm/
 npm-cli.js
 mpd-*
@@ -26,7 +27,6 @@ Pictures/
 Python*
 Games/
 arduino/
-node-red/
 WebSphere-MQTT*
 *munin*
 nohup.out
