@@ -7,7 +7,7 @@ if (!$con)
 
 mysql_select_db("mydata", $con);
 
-$queryString = "SELECT * FROM gas WHERE curdate() < timestamp AND timestamp > timestampadd(SECOND, -20, now())";
+$queryString = "SELECT * FROM gas WHERE curdate() < timestamp AND timestamp > timestampadd(SECOND, -90, now())";
 
 $result = mysql_query($queryString) or die(mysql_error());
 
