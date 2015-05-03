@@ -24,11 +24,11 @@ use POSIX strftime;
 $0 = "gasmonitor";
 
 # Wait until the nanobroker has started and the /ttyUSB device is ready
-print STDERR "Waiting for nanobroker to be started...\n";
-$file = '/tmp/nanobroker.log';
-sleep 5 until -e $file;
-print STDERR "Nanobroker started. Waiting for $serial_port to exist...\n";
-sleep 5 until -e $serial_port;
+#print STDERR "Waiting for nanobroker to be started...\n";
+#$file = '/tmp/nanobroker.log';
+#sleep 5 until -e $file;
+#print STDERR "Nanobroker started. Waiting for $serial_port to exist...\n";
+#sleep 5 until -e $serial_port;
 print STDERR "Serial port ready. Starting application\n";
 
 while ($retries < $retry_attempts)
@@ -49,18 +49,19 @@ while ($retries < $retry_attempts)
 
   if ($retries == 0)
   {
-     $cc = new GasMonitor(broker=>$broker,name=>$your_name,debug=>1);
+#     $cc = new GasMonitor(broker=>$broker,name=>$your_name,debug=>1);
 
      while (<SERIAL>)
      {
-        $cc->publish_gas($_);
+#        $cc->publish_gas($_);
+        print $_;
      }
   }
   else
   {
         print STDERR strftime ("%d%b%Y-%H:%M:%S - Can't open serial port, retrying in 1 second...\n",localtime(time()));
         sleep(1);
-        $serial_port = "/dev/ttyUSB2";
+        $serial_port = "/dev/ttyUSBGAS";
   }
 }
                                 

@@ -12,15 +12,15 @@ sub new
 	my $keepalive = $params{keepalive} || 120;
 	my $debug = $params{debug} || 0;
     
-        my $db_name = 'mydata';
-        my $db_user = 'cc';
-        my $db_type = 'mysql';
-        my $db = DBI->connect("DBI:$db_type:$db_name",$db_user) or die "Couldn't connect to database: " . DBI->errstr;
+#        my $db_name = 'mydata';
+#        my $db_user = 'cc';
+#        my $db_type = 'mysql';
+#        my $db = DBI->connect("DBI:$db_type:$db_name",$db_user) or die "Couldn't connect to database: " . DBI->errstr;
 
         # Since gas readings often don't come for days, we need to automatically 
         # reconnect to the DB after the default 8 hour timeout
-        $db->{'AutoCommit'} = 1;
-        $db->{mysql_auto_reconnect} = 1;
+#        $db->{'AutoCommit'} = 1;
+#        $db->{mysql_auto_reconnect} = 1;
 
         # Variables used for calculating a rolling average
         my $size = 50;
