@@ -16,7 +16,7 @@
   <script id="source" language="javascript" type="text/javascript">
   var sensorVoltages = [];
   function createGraph() {
-     $.get('/wirelessnodes/02/voltage/Ndays?numberofdayshistory=150', function(d){
+     $.get('/wirelessnodes/02/voltage/Ndays?numberofdayshistory=950', function(d){
           sensorVoltages[0] = [];
           $(d).find('nextrow').each(function(){
              var $record = $(this);
@@ -25,7 +25,7 @@
              sensorVoltages[0].push([$timestamp, $voltage]);
            });
 
-           $.get('/wirelessnodes/03/voltage/Ndays?numberofdayshistory=150', function(d){
+           /*$.get('/wirelessnodes/03/voltage/Ndays?numberofdayshistory=150', function(d){
               sensorVoltages[1] = [];
               $(d).find('nextrow').each(function(){
                  var $record = $(this);
@@ -41,13 +41,13 @@
                     var $timestamp = $record.find('timestamp').text() * 1000;
                     var $voltage = $record.find('voltage').text();
                     sensorVoltages[2].push([$timestamp, $voltage]);
-                 });
+                 });*/
 
            $.plot($("#thegraph"), [
            { data: sensorVoltages[0],
               points: {show: false},
               lines: {show: true},
-              label: "Lf"},
+              label: "Loft"},
             { data: sensorVoltages[1],
               points: {show: false},
               lines: {show: true},
@@ -66,8 +66,8 @@
             series: { points: {show: false}, lines: {show:true}, color: "rgba(135, 182, 217, 0.8)"},
             grid: { color: "rgba(135, 182, 217, 0.8)"}
           });
-         });
-       });
+        // });
+       //});
        });
 
   }

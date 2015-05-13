@@ -25,6 +25,11 @@
  
      var sensorVoltages = [];
 
+     // Keep a note of when we last heard from each of the sensors
+     var sensor2LastSeen = 0;
+     var sensor3LastSeen = 0;
+     var sensor4LastSeen = 0;
+
      var currentTemperature = 0;
      var maxTemperatureFromAllSensors = 0;
 
@@ -918,7 +923,7 @@
         });
 
         // Progress bar for humidity
-        $("#progressbarhumidity").progressbar({
+        $("#progressbarhumiditylounge").progressbar({
            value: 10 
         });
 
@@ -1044,11 +1049,17 @@
              $.get('/temp2', function(d, status){
                 if (status !== 'success') loadedTemperatures = false;
                 $('#progressbartemp2').progressbar('option', 'value', (d / 50 * 100));
+                $('#progressbartemp2').css({
+                    "background": '#c85252' 
+                });
                 $('#temp2amountlabel').html(d);
 
                 $.get('/temp3', function(d, status){
                    if (status !== 'success') loadedTemperatures = false;
                    $('#progressbartemp3').progressbar('option', 'value', (d / 50 * 100));
+                   $('#progressbartemp3').css({
+                      "background": '#c85252' 
+                   });
                    $('#temp3amountlabel').html(d);
 
                    $.get('/temp4', function(d, status){
@@ -1085,16 +1096,22 @@
         if (!loadedHumidity) {
            loadedHumidity = true;
 
-           $.get('/humidity2', function(d, status){
+           $.get('/humidity3', function(d, status){
               if (status !== 'success') loadedHumidity = false;
               var humidity = d;
-              $('#progressbarhumidity').progressbar('option', 'value', parseInt(d));
-              $('#humidityamountlabel').html(d);
+              $('#progressbarhumiditylounge').progressbar('option', 'value', parseInt(d));
+              $('#progressbarhumiditylounge').css({
+                 "background": '#c85252' 
+              });
+              $('#humidityloungeamountlabel').html(d);
         
-              $.get('/humidity3', function(d, status){
+              $.get('/humidity2', function(d, status){
                  if (status !== 'success') loadedHumidity = false;
                  var humidity = d;
                  $('#progressbarhumidityloft').progressbar('option', 'value', parseInt(d));
+                 $('#progressbarhumidityloft').css({
+                    "background": '#c85252' 
+                 });
                  $('#humidityloftamountlabel').html(d);
           
                  $.get('/humidity4', function(d, status){
@@ -1117,18 +1134,41 @@
           
           $.get('/house/sensors/02/timestamp', function(d){
              document.getElementById('node02timestamp').innerHTML = d;
+             sensor2LastSeen = new Date(d).getTime();
+
+             // If the sensor sent us data in the last 12 hours (720 minutes), count that as up-to-date
+             if ((((new Date().getTime() - sensor2LastSeen) / 1000) / 60) < 720) {
+                $('#progressbartemp2').css({
+                   "background": '#ffffff' 
+                });
+                $('#progressbarhumidityloft').css({
+                   "background": '#ffffff' 
+                });
+             }
 
              $.get('/house/sensors/03/voltage', function(d){
                 document.getElementById('node03voltage').innerHTML = (parseInt(d) / 10) + "v";
 
                 $.get('/house/sensors/03/timestamp', function(d){
                    document.getElementById('node03timestamp').innerHTML = d;
+                   sensor3LastSeen = new Date(d).getTime();
+
+                   // If the sensor sent us data in the last 12 hours (720 minutes), count that as up-to-date
+                   if ((((new Date().getTime() - sensor3LastSeen) / 1000) / 60) < 720) {
+                      $('#progressbartemp3').css({
+                         "background": '#ffffff' 
+                      });
+                      $('#progressbarhumiditylounge').css({
+                         "background": '#ffffff' 
+                      });
+                   }
 
                    $.get('/house/sensors/04/voltage', function(d){
                       document.getElementById('node04voltage').innerHTML = (parseInt(d) / 10) + "v";
 
                       $.get('/house/sensors/04/timestamp', function(d){
                          document.getElementById('node04timestamp').innerHTML = d;
+                         sensor4LastSeen = new Date(d).getTime();
                       }, "text");
                    }, "text");
                 }, "text");

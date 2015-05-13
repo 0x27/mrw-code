@@ -15,8 +15,13 @@
   <!--  jquery code to create the graph  -->
   <script id="source" language="javascript" type="text/javascript">
   function createGraph() {
-     $.get('/wirelessnodes/03/voltage/Ndays?numberofdayshistory=150', function(d){
-     //$.get('/wirelessnodes/03/voltage/history', function(d){
+     var date = "May 13 2015 07:10:08";
+     var todayDate = new Date();
+     alert(date);
+     var timestamp = new Date(date);
+     alert(timestamp);
+     alert((((todayDate.getTime() - timestamp.getTime()) / 1000) / 60) + " minutes ago");
+     /*$.get('/wirelessnodes/03/voltage/Ndays?numberofdayshistory=20', function(d){
         var voltages = [];
         $(d).find('nextrow').each(function(){
            var $record = $(this);
@@ -30,7 +35,7 @@
           series: { points: {show: false}, lines: {show:true}, color: "rgba(135, 182, 217, 0.8)"},
           grid: { color: "rgba(135, 182, 217, 0.8)"}
         });
-     });
+     });*/
   }
   </script>
 

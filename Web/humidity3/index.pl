@@ -11,7 +11,7 @@ my $mqtt = MQTT::Client->new({
 
 # To perform a 'one-shot' publish to a topic:
 $mqtt->connect();
-$mqtt->subscribe("local/rfm12/nodes/02/humidity",0);
+$mqtt->subscribe("local/rfm12/nodes/03/humidity",0);
 $listener = Thread->new(\&thread1);
 
 sub thread1 {

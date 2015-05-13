@@ -227,12 +227,12 @@
 
                           <div class="vertical-spacer"></div>
 
-                          <div><span>Lounge Humidity</span><span> - </span><span id="humidityamountlabel">0</span><span> %</span></div>
-                          <div class="medium-progress-bar" id="progressbarhumidity" name="progressbarhumidity"></div>
-                          <div class="vertical-spacer-medium"></div>
-
                           <div><span>Loft Humidity</span><span> - </span><span id="humidityloftamountlabel">0</span><span> %</span></div>
                           <div class="medium-progress-bar" id="progressbarhumidityloft" name="progressbarhumidityloft"></div>
+                          <div class="vertical-spacer-medium"></div>
+
+                          <div><span>Lounge Humidity</span><span> - </span><span id="humidityloungeamountlabel">0</span><span> %</span></div>
+                          <div class="medium-progress-bar" id="progressbarhumiditylounge" name="progressbarhumiditylounge"></div>
                           <div class="vertical-spacer-medium"></div>
 
                           <div><span>Hallway Humidity</span><span> - </span><span id="humidityhallwayamountlabel">0</span><span> %</span></div>
