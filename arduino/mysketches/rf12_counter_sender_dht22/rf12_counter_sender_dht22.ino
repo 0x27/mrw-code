@@ -51,6 +51,7 @@ byte batteryVoltage = 0;
 byte shuttingDown = 0;
 int sleepIterations = 10;
 byte nodeNumber = 3;
+byte ackRetries = 0;
 
 void setup() {
   
@@ -154,12 +155,18 @@ void loop() {
                    // Reinstate this delay for Serial output to work correctly
                    //delay(20);
                    
-                   if (oldCounter == counter) {
+                   if (oldCounter == counter && ackRetries < 10) {
                      // We didn't receive an ACK - try again
                      rf12_sleep(RF12_SLEEP);
                      Sleepy::loseSomeTime(4000);
                      rf12_sleep(RF12_WAKEUP);
+                     ackRetries++;
                    } else {
+                     ackRetries = 0;
+                     counter++;
+                     if (counter > 9) {
+                        counter = 0;
+                     }
                      break;
                    }
                 }
