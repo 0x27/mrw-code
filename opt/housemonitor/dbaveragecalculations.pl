@@ -9,11 +9,12 @@ use DBI;
 use POSIX strftime;
 
 my $db_name = 'mydata';
-my $db_user = 'cc';
+my $db_user = 'dbstats';
 my $db_type = 'mysql';
 my $db = DBI->connect("DBI:$db_type:$db_name",$db_user) or die "Couldn't connect to database: " . DBI->errstr;
-my $numberOfDays = 180;
+my $numberOfDays = 100;
 my $i = 0;
+my $daysSinceCachedDataRecorded = 0;
 
 print (localtime);
 print "Calculating daily stats for the house\n";
@@ -35,7 +36,7 @@ while ($i < $numberOfDays) {
   my $nextSolarWhs = 0.0;
   my $nextTemp = 0.0;
 
-  my $select_averages = $db->prepare_cached('SELECT * FROM daily_stats WHERE (timestampadd(DAY,-' . ($numberOfDays - $i) . ',curdate()) = date(timestamp))');   
+  my $select_averages = $db->prepare_cached('SELECT *,unix_timestamp(timestamp) FROM daily_stats WHERE (timestampadd(DAY,-' . ($numberOfDays - $i) . ',curdate()) = date(timestamp))');   
 
   my $select_watts_handle = $db->prepare_cached('SELECT unix_timestamp(timestamp),watts,timestamp FROM electricity WHERE timestamp > timestampadd(DAY,-' . ($numberOfDays - $i) . ',curdate()) and timestamp < timestampadd(DAY,-' . ($numberOfDays - ($i + 1)) . ',curdate()) ORDER BY timestamp');
 
@@ -47,11 +48,13 @@ while ($i < $numberOfDays) {
 
   $select_averages->execute();
 
-  $select_averages->bind_columns(undef, \$cache_timestamp, \$cache_avgtemp, \$cache_kwhs, \$cache_gasmcubed, \$cache_solarwhs);
+  $select_averages->bind_columns(undef, \$cache_timestamp, \$cache_avgtemp, \$cache_kwhs, \$cache_gasmcubed, \$cache_solarwhs, \$cache_unixtimestamp);
 
   # If we don't have cached values stored, calculate them from the raw 
   # data and store the results back into the cache
   if (!$select_averages->fetch()) {
+
+    $daysSinceCachedDataRecorded++;
 
     # Query the database for the raw electricity usage data
     $select_watts_handle->execute();
@@ -60,7 +63,7 @@ while ($i < $numberOfDays) {
 
     # LOOP THROUGH RESULTS
     while($select_watts_handle->fetch()) {
-      # print($timestamp . "\n");
+      #print($timestamp . "\n");
       if ($lastTimestamp == 0) {
         # Do nothing
       } else {
@@ -76,7 +79,7 @@ while ($i < $numberOfDays) {
       #print "$timestamp, $watts, $nextKwhs\n";
     } 
 
-    print "Total calculated kwhs on " . substr($timestamp,0,10) . " = " . $kwhsTotal . "\n";
+    print "Total calculated kwhs on " . substr($cache_timestamp,0,10) . " = " . $kwhsTotal . "\n";
 
     $lastTimestamp = 0;
 
@@ -102,7 +105,7 @@ while ($i < $numberOfDays) {
       $lastSolarWatts = $solarwatts;
     } 
 
-    print "Total generated solar watt hours on " . substr($solartimestamp,0,10) . " = " . $solarWhsTotal . "\n";
+    print "Total generated solar watt hours on " . substr($cache_timestamp,0,10) . " = " . $solarWhsTotal . "\n";
 
     $lastTimestamp = 0;
 
@@ -133,7 +136,7 @@ while ($i < $numberOfDays) {
     # Divide the total temperature by the number of seconds in a day to get the average
     $averageTemp = $tempTotal / 86400;
 
-    print "Average calculated temperature on " . substr($timestamp2,0,10) . " = " . $averageTemp . "\n";
+    print "Average calculated temperature on " . substr($cache_timestamp,0,10) . " = " . $averageTemp . "\n";
 
     # Query the database for the raw gas data
     $select_gas_handle->execute();
@@ -148,19 +151,22 @@ while ($i < $numberOfDays) {
 
     print "Total gas (metres^3) used on " . substr($timestamp3,0,10) . " = " . $gasMCubedTotal . "\n";
 
-    #if ($kwhsTotal > 0 && $averageTemp > 0 && $totalgasmcubed > 0 && $solarWhsTotal > 0) {
+    if ($kwhsTotal == 0 && $averageTemp == 0 && $gasMCubedTotal == 0 && $solarWhsTotal == 0) {
+      print "No data was collected today at all. Ignoring.\n";
+    } else {
       print "Updating cache database to " . int($kwhsTotal * 1000) . " and " . int($averageTemp * 1000) . " and " . int($gasMCubedTotal * 1000) . " and " . int($solarWhtsTotal) . "\n";
       # Update the daily stats table so we've got this value cache
-      my $query = 'INSERT INTO daily_stats(timestamp, totalwatthrs, avgtemp, totalgasmcubed, totalsolarwatthrs) values (\'' . $timestamp . '\', \'' . int($kwhsTotal * 1000) . '\', \'' . int($averageTemp * 1000) . '\', \'' . int($gasMCubedTotal * 1000) . '\', \'' . int($solarWhsTotal) . '\')';
+      my $query = 'INSERT INTO daily_stats(timestamp, totalwatthrs, avgtemp, totalgasmcubed, totalsolarwatthrs) values (timestampadd(DAY, ' . $daysSinceCachedDataRecorded . ', \'' . $cache_timestamp . '\'), \'' . int($kwhsTotal * 1000) . '\', \'' . int($averageTemp * 1000) . '\', \'' . int($gasMCubedTotal * 1000) . '\', \'' . int($solarWhsTotal) . '\')';
       print "Query:\n" . $query . "\n";
       my $insert_into_daily_stats_handle = $db->prepare_cached($query);
       $insert_into_daily_stats_handle->execute();
       $insert_into_daily_stats_handle->finish();
-    #}
+    }
 
     $lastTimestamp = 0;
   } else {
     print "Total cached kwhs on " . substr($cache_timestamp,0,10) . " = " . ($cache_kwhs / 1000) . ", average temp = " . ($cache_avgtemp / 1000) . ", total gas (metres-cubed) = " . ($cache_gasmcubed) . ", total solar whs = " . ($cache_solarwhs) . "\n";
+    $daysSinceCachedDataRecorded = 0;
   }
 
   $select_watts_handle->finish();

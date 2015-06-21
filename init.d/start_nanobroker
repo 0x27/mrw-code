@@ -1,4 +1,4 @@
 #!/bin/bash
-cd /home/mwhitehead/opt/nanobrokerIBM
+cd /home/mwhitehead/mrw-code/opt/nanobrokerIBM
 nohup ./broker broker.cfg >> /tmp/nanobroker.log &
 

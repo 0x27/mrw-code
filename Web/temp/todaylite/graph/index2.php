@@ -16,14 +16,12 @@
      var idTToday = [];
      var lfTToday = [];
      var lgTToday = [];
+     var hToday = [];
      var cT = 0;
 
      function plotGraph() {
 
        // Only plot the graph if both arrays of data exist
-       if (idTToday.length > 0 &&
-           lfTToday.length > 0 &&
-           lgTToday.length > 0) {
 
          // Add a new data point to the end of which ever data set needs it, to make
          // sure both graph plots have a data point at the same final timestamp
@@ -31,16 +29,20 @@
              idTToday[idTToday.length - 1][0]) {
 
              idTToday.push([lfTToday[lfTToday.length - 1][0], idTToday[idTToday.length - 1][1]]);
+             hToday.push([lfTToday[lfTToday.length - 1][0], hToday[hToday.length - 1][1]]);
          } else {
              lfTToday.push([idTToday[idTToday.length - 1][0], lfTToday[lfTToday.length - 1][1]]);
+             hToday.push([idTToday[idTToday.length - 1][0], hToday[hToday.length - 1][1]]);
          }
 
          // Do the same for the beginning of the arrays, to make sure
          // line on the graph starts at the same timestamp.
          if (lfTToday[0][0] < idTToday[0][0]) {
              idTToday.unshift([lfTToday[0][0], idTToday[0][1]]);
+             hToday.unshift([lfTToday[0][0], hToday[0][1]]);
          } else {
              lfTToday.unshift([idTToday[0][0], lfTToday[0][1]]);
+             hToday.unshift([idTToday[0][0], hToday[0][1]]);
          }
 
          var i = 0;
@@ -73,21 +75,25 @@
            points: {show: false},
            lines: {show: true},
            color: "rgba(110, 180, 30, 1.4)",
-           label: "L"},
+           label: "Lf"},
          { data: lgTToday,
            points: {show: false},
            lines: {show: true},
            color: "rgba(195, 110, 50, 1.4)",
-           label: "S"}
+           label: "Lg"},
+         { data: hToday,
+           points: {show: false},
+           lines: {show: true},
+           color: "rgba(150, 110, 30, 1.4)",
+           label: "H"}
          ],
          {
-           legend: { position: "ne", noColumns: 3, margin: 4 },
+           legend: { position: "ne", noColumns: 4, margin: 6 },
            xaxis: { mode: "time" },
            yaxis: { max: xRange },
            series: { points: {show: true}, lines: {show:true}, color: "rgba(135, 182, 217, 0.8)"},
            grid: { color: "rgba(135, 182, 217, 0.8)"}
          });
-       }
      }
 
      function loadGraph()
@@ -95,6 +101,7 @@
        idTToday = [];
        lfTToday = [];
        lgTToday = [];
+       hToday = [];
 
          $.get('/temp/today/index-noauth.php?daysold=0', function(d){
            $(d).find('nextrow').each(function(){
@@ -106,20 +113,30 @@
 
            $.get('/temp2/today/index-noauth.php?daysold=0', function(e){
              $(e).find('nextrow').each(function(){
-             var $record = $(this);
-             var $timestamp = $record.find('timestamp').text() * 1000;
-             var $data = $record.find('data').text();
-             lfTToday.push([$timestamp, $data]);
+               var $record = $(this);
+               var $timestamp = $record.find('timestamp').text() * 1000;
+               var $data = $record.find('data').text();
+               lfTToday.push([$timestamp, $data]);
              });
 
              $.get('/temp3/today/index-noauth.php?daysold=0', function(e){
                 $(e).find('nextrow').each(function(){
-                var $record = $(this);
-                var $timestamp = $record.find('timestamp').text() * 1000;
-                var $data = $record.find('data').text();
-                lgTToday.push([$timestamp, $data]);
+                  var $record = $(this);
+                  var $timestamp = $record.find('timestamp').text() * 1000;
+                  var $data = $record.find('data').text();
+                  lgTToday.push([$timestamp, $data]);
                 });
-                plotGraph();
+
+                $.get('/temp4/today/index-noauth.php?daysold=0', function(e){
+                  $(e).find('nextrow').each(function(){
+                    var $record = $(this);
+                    var $timestamp = $record.find('timestamp').text() * 1000;
+                    var $data = $record.find('data').text();
+                    hToday.push([$timestamp, $data]);
+                  });
+                  
+                  plotGraph();
+                });
              });
            });
          });

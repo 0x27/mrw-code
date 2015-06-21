@@ -16,7 +16,7 @@
   <script id="source" language="javascript" type="text/javascript">
   var sensorVoltages = [];
   function createGraph() {
-     $.get('/wirelessnodes/02/voltage/Ndays?numberofdayshistory=150', function(d){
+     $.get('/wirelessnodes/02/voltage/Ndays?numberofdayshistory=950', function(d){
           sensorVoltages[0] = [];
           $(d).find('nextrow').each(function(){
              var $record = $(this);
@@ -25,7 +25,7 @@
              sensorVoltages[0].push([$timestamp, $voltage]);
            });
 
-           $.get('/wirelessnodes/03/voltage/Ndays?numberofdayshistory=150', function(d){
+           /*$.get('/wirelessnodes/03/voltage/Ndays?numberofdayshistory=150', function(d){
               sensorVoltages[1] = [];
               $(d).find('nextrow').each(function(){
                  var $record = $(this);
@@ -41,27 +41,22 @@
                     var $timestamp = $record.find('timestamp').text() * 1000;
                     var $voltage = $record.find('voltage').text();
                     sensorVoltages[2].push([$timestamp, $voltage]);
-                 });
+                 });*/
 
-
-            if (sensorVoltages[0].length > 0 &&
-                sensorVoltages[1].length > 0 &&
-                sensorVoltages[2].length > 0) {
-
-          $.plot($("#thegraph"), [
-            { data: sensorVoltages[0],
+           $.plot($("#thegraph"), [
+           { data: sensorVoltages[0],
               points: {show: false},
               lines: {show: true},
               label: "Loft"},
             { data: sensorVoltages[1],
               points: {show: false},
               lines: {show: true},
-              label: "Lounge",
+              label: "Lg",
               color: "rgba(195, 110, 50, 1.4)"},
             { data: sensorVoltages[2],
               points: {show: false},
               lines: {show: true},
-              label: "Garden",
+              label: "G",
               color: "rgba(110, 180, 30, 1.4)"}
             ],
           {
@@ -71,10 +66,8 @@
             series: { points: {show: false}, lines: {show:true}, color: "rgba(135, 182, 217, 0.8)"},
             grid: { color: "rgba(135, 182, 217, 0.8)"}
           });
-       }
-
-         });
-       });
+        // });
+       //});
        });
 
   }

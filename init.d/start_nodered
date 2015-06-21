@@ -1,0 +1,6 @@
+#!/bin/bash
+cd /home/mwhitehead/mrw-code/opt/node_modules/node-red
+date >> /tmp/nodered.log
+echo "Node Red started" >> /tmp/nodered.log
+nohup node red.js --settings /home/mwhitehead/mrw-code/production-settings.js >> /tmp/nodered.log &
+
