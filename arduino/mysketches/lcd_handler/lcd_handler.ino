@@ -4,6 +4,8 @@
   @copyright Matthew Whitehead 2014 
  */
 
+#define prog_char  char PROGMEM
+
 #include <SPI.h>
 #include <Ethernet.h>
 #include <LiquidCrystal.h>
@@ -14,21 +16,54 @@
 // Comment out to make production build
 #define DEV
 
+#define BACKLIGHTPIN 9
+
+#define DEFAULTBACKLIGHTTIME -1
+#define MAXBACKLIGHTTIME 60
+#define DEFAULTMENURESETTIME 20
+#define DEFAULTNETWORKENABLED 0
+
 LiquidCrystal lcd(7, 6, 5, 4, 3, 2);
 
 short temp = 0;
 
-prog_char versionNumber[] PROGMEM = "Version: 0.1.0";
-PROGMEM const char *miscStrings[] = {versionNumber};
+// Misc strings
+const char versionNumber[] PROGMEM = "Version: 0.1.0";
+const char modelName[] PROGMEM = "Model: LCD-DSP-01";
+const char sampleMessageOne[] PROGMEM = "Here's sample message number one";
+const char sampleMessageTwo[] PROGMEM = "And here's another message to display";
+const char * const miscStrings[] PROGMEM = {versionNumber, modelName, sampleMessageOne, sampleMessageTwo};
 
+// Error messages
+const char error01[] PROGMEM = "Config data too long";
+const char * const errorStrings[] PROGMEM = {error01};
+
+// Info messages
+const char info01[] PROGMEM = "Factory reset menu";
+const char info02[] PROGMEM = "Reset to factory settings? Press RIGHT 3 times, LEFT 3 times.";
+const char info03[] PROGMEM = "Factory settings restored.";
+const char info04[] PROGMEM = "OK button";
+const char info05[] PROGMEM = "Cancel/Menu button";
+const char info06[] PROGMEM = "Left button";
+const char info07[] PROGMEM = "Right button";
+const char info08[] PROGMEM = "Finding IP address using DHCP...";
+const char info09[] PROGMEM = "Network settings";
+const char info10[] PROGMEM = "Ping server";
+const char info11[] PROGMEM = "Version info menu";
+const char info12[] PROGMEM = "Error. Settings too long for EEPROM";
+const char info13[] PROGMEM = "Showing messages";
+const char info14[] PROGMEM = "Message received over serial: ";
+const char * const infoStrings[] PROGMEM = {info01, info02, info03, info04, info05, info06, info07, info08, info09, info10, info11, info12, info13,
+                                            info14};
+  
 // Strings for displaying on the LCD - stored in flash memory to save space in SRAM
-prog_char menuItem01[] PROGMEM = "        Menu"; 
-prog_char menuItem02[] PROGMEM = "- View network info";
-prog_char menuItem03[] PROGMEM = "- Ping server";
-prog_char menuItem04[] PROGMEM = "- Show settings";
-prog_char menuItem05[] PROGMEM = "- Restore defaults";
-prog_char menuItem06[] PROGMEM = "- Version info";
-PROGMEM const char *menuStrings[] =
+const char menuItem01[] PROGMEM = "        Menu"; 
+const char menuItem02[] PROGMEM = "- View network info";
+const char menuItem03[] PROGMEM = "- Ping server";
+const char menuItem04[] PROGMEM = "- Show settings";
+const char menuItem05[] PROGMEM = "- Restore defaults";
+const char menuItem06[] PROGMEM = "- Version info";
+const char * const menuStrings[] PROGMEM =
 {   
   menuItem01,
   menuItem02,
@@ -39,14 +74,14 @@ PROGMEM const char *menuStrings[] =
 };
 
 // Strings for performing HTTP over TCP, plus related LCD text
-prog_char httpString01[] PROGMEM = "GET / HTTP/1.1"; 
-prog_char httpString02[] PROGMEM = "Host: www.google.com";
-prog_char httpString03[] PROGMEM = "Connection: close";
-prog_char httpString04[] PROGMEM = "www.google.com";
-prog_char httpString05[] PROGMEM = "Connecting...";
-prog_char httpString06[] PROGMEM = "Reading data...";
-prog_char httpString07[] PROGMEM = "Ping Success!";
-PROGMEM const char *httpStrings[] =
+const char httpString01[] PROGMEM = "GET / HTTP/1.1"; 
+const char httpString02[] PROGMEM = "Host: www.google.com";
+const char httpString03[] PROGMEM = "Connection: close";
+const char httpString04[] PROGMEM = "www.google.com";
+const char httpString05[] PROGMEM = "Connecting...";
+const char httpString06[] PROGMEM = "Reading data...";
+const char httpString07[] PROGMEM = "Ping Success!";
+const char * const httpStrings[] PROGMEM =
 {   
   httpString01,
   httpString02,
@@ -58,34 +93,34 @@ PROGMEM const char *httpStrings[] =
 };
 
 // Static strings for sending to a connected browser
-prog_char httpResponseString01[] PROGMEM = "HTTP/1.1 200 OK"; 
-prog_char httpResponseString02[] PROGMEM = "Content-Type: text/html";
-prog_char httpResponseString03[] PROGMEM = "Connection: close";
-prog_char httpResponseString04[] PROGMEM = "<html><h3 style=\"font-family:arial\">Settings Saved</h3></html>";
-prog_char httpResponseString05[] PROGMEM = "<!DOCTYPE HTML>";
-prog_char httpResponseString06[] PROGMEM = "<html>";
-prog_char httpResponseString07[] PROGMEM = "<title>Config Utility</title>";
-prog_char httpResponseString08[] PROGMEM = "<body style=\"font-family:arial\">";
-prog_char httpResponseString09[] PROGMEM = "<h3>Config Utility</h3><p></p>";
-prog_char httpResponseString10[] PROGMEM = "<p> "; // Place to insert the "Version: 1.0.0" text
-prog_char httpResponseString11[] PROGMEM = "</p><p></p>";
-prog_char httpResponseString12[] PROGMEM = "<hr align=\"left\" width=\"300\"><p></p>";
-prog_char httpResponseString13[] PROGMEM = "<form name=\"form1\" action=\"\" method=\"post\">";
-prog_char httpResponseString14[] PROGMEM = "<label for=\"bltimer\">Backlight timer (seconds)</label>";
-prog_char httpResponseString15[] PROGMEM = "<input type=\"text\" name=\"blttimer\" id=\"blttimer\" value=\"";
-prog_char httpResponseString16[] PROGMEM = "\" maxlength=\"2\" size=\"8\"/><p></p>";
-prog_char httpResponseString17[] PROGMEM = "<label for=\"data\">HTTP poll rate (seconds)</label>";
-prog_char httpResponseString18[] PROGMEM = "<input type=\"text\" name=\"pollr\" id=\"pollr\" maxlength=\"10\" size=\"10\"/><p></p>";
-prog_char httpResponseString19[] PROGMEM = "<hr align=\"left\" width=\"300\"><p></p>";
-prog_char httpResponseString20[] PROGMEM = "<label for=\"url1\">HTTP data source</label>";
-prog_char httpResponseString21[] PROGMEM = "<input type=\"text\" name=\"url1\" id=\"url1\" value=\"";
-prog_char httpResponseString22[] PROGMEM = "\" maxlength=\"100\" size=\"40\"/><p></p>";
-prog_char httpResponseString23[] PROGMEM = "<hr align=\"left\" width=\"300\"><p></p>";
-prog_char httpResponseString24[] PROGMEM = "<input type=\"submit\" value=\"Save\"/>";
-prog_char httpResponseString25[] PROGMEM = "</form>";
-prog_char httpResponseString26[] PROGMEM = "</body>";
-prog_char httpResponseString27[] PROGMEM = "</html>";
-PROGMEM const char *httpResponseStrings[] =
+const char httpResponseString01[] PROGMEM = "HTTP/1.1 200 OK"; 
+const char httpResponseString02[] PROGMEM = "Content-Type: text/html";
+const char httpResponseString03[] PROGMEM = "Connection: close";
+const char httpResponseString04[] PROGMEM = "<html><h3 style=\"font-family:arial\">Settings Saved</h3></html>";
+const char httpResponseString05[] PROGMEM = "<!DOCTYPE HTML>";
+const char httpResponseString06[] PROGMEM = "<html>";
+const char httpResponseString07[] PROGMEM = "<title>Config Utility</title>";
+const char httpResponseString08[] PROGMEM = "<body style=\"font-family:arial\">";
+const char httpResponseString09[] PROGMEM = "<h3>Config Utility</h3><p></p>";
+const char httpResponseString10[] PROGMEM = "<p> "; // Place to insert the "Version: 1.0.0" text
+const char httpResponseString11[] PROGMEM = "</p><p></p>";
+const char httpResponseString12[] PROGMEM = "<hr align=\"left\" width=\"300\"><p></p>";
+const char httpResponseString13[] PROGMEM = "<form name=\"form1\" action=\"\" method=\"post\">";
+const char httpResponseString14[] PROGMEM = "<label for=\"bltimer\">Backlight timer (seconds)</label>";
+const char httpResponseString15[] PROGMEM = "<input type=\"text\" name=\"blttimer\" id=\"blttimer\" value=\"";
+const char httpResponseString16[] PROGMEM = "\" maxlength=\"2\" size=\"8\"/><p></p>";
+const char httpResponseString17[] PROGMEM = "<label for=\"data\">HTTP poll rate (seconds)</label>";
+const char httpResponseString18[] PROGMEM = "<input type=\"text\" name=\"pollr\" id=\"pollr\" maxlength=\"10\" size=\"10\"/><p></p>";
+const char httpResponseString19[] PROGMEM = "<hr align=\"left\" width=\"300\"><p></p>";
+const char httpResponseString20[] PROGMEM = "<label for=\"url1\">HTTP data source</label>";
+const char httpResponseString21[] PROGMEM = "<input type=\"text\" name=\"url1\" id=\"url1\" value=\"";
+const char httpResponseString22[] PROGMEM = "\" maxlength=\"100\" size=\"40\"/><p></p>";
+const char httpResponseString23[] PROGMEM = "<hr align=\"left\" width=\"300\"><p></p>";
+const char httpResponseString24[] PROGMEM = "<input type=\"submit\" value=\"Save\"/>";
+const char httpResponseString25[] PROGMEM = "</form>";
+const char httpResponseString26[] PROGMEM = "</body>";
+const char httpResponseString27[] PROGMEM = "</html>";
+const char * const httpResponseStrings[] PROGMEM =
 {   
   httpResponseString01,httpResponseString02,httpResponseString03,
   httpResponseString04,httpResponseString05,httpResponseString06,
@@ -99,10 +134,10 @@ PROGMEM const char *httpResponseStrings[] =
 };
 
 // Error strings for sending to a connected browser
-prog_char httpErrorString01[] PROGMEM = "HTTP/1.1 413 Request Entity too Large"; 
-prog_char httpErrorString02[] PROGMEM = "Content-Type: text/html";
-prog_char httpErrorString03[] PROGMEM = "Connection: close";
-PROGMEM const char *httpErrorStrings[] =
+const char httpErrorString01[] PROGMEM = "HTTP/1.1 413 Request Entity too Large"; 
+const char httpErrorString02[] PROGMEM = "Content-Type: text/html";
+const char httpErrorString03[] PROGMEM = "Connection: close";
+const char * const httpErrorStrings[] PROGMEM =
 {   
   httpErrorString01,httpErrorString02,httpErrorString03
 };
@@ -120,6 +155,7 @@ long timeSinceLastHTTPDataCheck = 0;
 byte lastHTTPConnWasGood = 0;
 byte httpDataCheckCount = 0;
 byte httpErrorBasedOnUserData = 0;
+byte usingNetworkFunction = 0;
 
 /* Structure defining the function a menu item calls */
 struct menuItem {
@@ -142,12 +178,11 @@ struct menu menus[1];
 struct menu *currentMenu;
 byte insideMenuFunction = 0;
 
-#define BACKLIGHTPIN 9
-#define DEFAULTBACKLIGHTTIME 20
-#define MAXBACKLIGHTTIME 60
-
 byte buttonReadState = 0;
 byte buttonState = 0;
+
+byte waitingFor3RightPresses = 0;
+byte waitingFor3LeftPresses = 0;
 
 // Enter a MAC address for your controller below.
 // Newer Ethernet shields have a MAC address printed on a sticker on the shield
@@ -246,6 +281,9 @@ void commonButtonFunctions() {
 }
 
 void printNetworkSettings() {
+
+  writeTextToSerial(&(infoStrings[8]));
+  
   lcd.clear();
   lcd.setCursor(0, 0);
   lcd.print("Connected to network");
@@ -552,6 +590,8 @@ void checkForHTTPData() {
  * Ping a server to check the network connection is OK
  */
 void pingServer() {
+
+  writeTextToSerial(&(infoStrings[9]));
   
   // Buffer for reading strings from flash memory
   char tempBuffer[25];
@@ -626,11 +666,18 @@ void pingServer() {
  * Show basic build information on screen
  */
 void showVersionInfo() {
+
+  writeTextToSerial(&(infoStrings[10]));
+  
   char tempBuffer[21];
   tempBuffer[0] = '\0';
-  strcpy_P(tempBuffer, (char*)pgm_read_word(&(miscStrings[0])));  // Copy version information out of flash strings
+  strcpy_P(tempBuffer, (char*)pgm_read_word(&(miscStrings[1])));  // Copy model name out of flash strings
   lcd.clear();
   lcd.setCursor(0, 0);
+  lcd.print(tempBuffer);
+
+  strcpy_P(tempBuffer, (char*)pgm_read_word(&(miscStrings[0])));  // Copy version information out of flash strings
+  lcd.setCursor(0, 1);
   lcd.print(tempBuffer);
 }
 
@@ -638,7 +685,14 @@ void showVersionInfo() {
  * Define the actions to take when OK is pressed
  */
 void okButtonPressed() {
+
+  writeTextToSerial(&(infoStrings[3]));
+  
   commonButtonFunctions();
+
+  // If we were waiting for factory reset presses, cancel all of that
+  waitingFor3RightPresses = 0;
+  waitingFor3LeftPresses = 0;
   
   // If we're in a menu, call the next function. Otherwise do nothing for the time being.
   if (currentMenu != 0) {
@@ -652,8 +706,14 @@ void okButtonPressed() {
  
  */
 void cancelButtonPressed() {
-  Serial.println("Cancel");
+
+  writeTextToSerial(&(infoStrings[4]));
+  
   commonButtonFunctions();
+
+  // If we were waiting for factory reset presses, cancel all of that
+  waitingFor3RightPresses = 0;
+  waitingFor3LeftPresses = 0;
   
   if (currentMenu == 0) {
     // We're not currently in a menu - so load the main menu
@@ -685,16 +745,31 @@ void cancelButtonPressed() {
  * Define the actions to take when the RIGHT button is pressed
  */
 void rightButtonPressed() {
-  commonButtonFunctions();
+
+  writeTextToSerial(&(infoStrings[6]));
   
-  if (currentMenu != 0) {
-    incMenuCursor(currentMenu);
-    showCurrentMenu();
+  commonButtonFunctions();
+
+  // Are we doing a factory reset?
+  if (waitingFor3RightPresses) {
+    waitingFor3RightPresses++;
+    if (waitingFor3RightPresses == 4) {
+      waitingFor3LeftPresses = 1;
+      waitingFor3RightPresses = 0;
+    }
   } else {
-    // We're in the messages view
-    if (messageCursor < (numberOfMessages)) {
-      messageCursor++;
-      showMessages();
+    waitingFor3RightPresses = 0;
+    waitingFor3LeftPresses = 0;
+  
+    if (currentMenu != 0) {
+      incMenuCursor(currentMenu);
+      showCurrentMenu();
+    } else {
+      // We're in the messages view
+      if (messageCursor < (numberOfMessages)) {
+        messageCursor++;
+        showMessages();
+      }
     }
   }
 }
@@ -703,16 +778,31 @@ void rightButtonPressed() {
  * Define the actions to take when the LEFT button is pressed
  */
 void leftButtonPressed() {
-  commonButtonFunctions();
+
+  writeTextToSerial(&(infoStrings[5]));
   
-  if (currentMenu != 0) {
-    decMenuCursor(currentMenu);
-    showCurrentMenu();
+  commonButtonFunctions();
+
+  // Are we doing a factory reset?
+  if (waitingFor3LeftPresses) {
+    waitingFor3LeftPresses++;
+    if (waitingFor3LeftPresses == 4) {
+      waitingFor3LeftPresses = 0;
+      doFactoryReset();
+    }
   } else {
-    // We're in the messages view
-    if (messageCursor > 1) {
-      messageCursor--;
-      showMessages();
+    waitingFor3RightPresses = 0;
+    waitingFor3LeftPresses = 0;
+  
+    if (currentMenu != 0) {
+      decMenuCursor(currentMenu);
+      showCurrentMenu();
+    } else {
+      // We're in the messages view
+      if (messageCursor > 1) {
+        messageCursor--;
+        showMessages();
+      }
     }
   }
 }
@@ -772,46 +862,64 @@ void showMessages() {
   lcd.print(messageTitle);
   
   if (numberOfMessages > 0) {
-    printText(messages[messageCursor]);
+    printMessage(messages[messageCursor], 1);
   }
 }
 
+void writeTextToSerial(const char* const *addressOfProgmemString) {
+  char tempBuffer[80];
+  strcpy_P(tempBuffer, (char*)pgm_read_word(addressOfProgmemString));  // Copy the string out of flash-stored strings
+  printMessage(tempBuffer, -1);
+}
+
+void displayTextOnScreen(const char* const *addressOfProgmemString) {
+  char tempBuffer[80];
+  strcpy_P(tempBuffer, (char*)pgm_read_word(addressOfProgmemString));  // Copy the string out of flash-stored strings
+  printMessage(tempBuffer, 0);
+}
+
 /*
- * Display the text of the message on screen, starting on the second line.
+ * Display the text of the message on screen starting on the specified line (0-3), or to 
+ * Serial if line = -1
  */
-void printText(char *message) {
-  char nextLine[21];
-  nextLine[20] = '\0';
-  byte messageLength = strlen(message);
+void printMessage(char *message, const short lineToStartOn) {
+
+  if (lineToStartOn == -1) {
+    // Write the text to Serial
+    Serial.println(message);
+  } else {
+
+    // If we're starting from the top of the screen, clear it
+    if (lineToStartOn == 0) lcd.clear();
+    
+    char nextLine[21];
+    nextLine[20] = '\0';
+    byte messageLength = strlen(message);
+    char* startOfMessage = ((hasMessageID(message) > 0) && (hasMessageID(message) < 10)) ? message + 3 : message;
   
-  Serial.println("Printing text...");
-  Serial.println(message);
-  char* startOfMessage = ((hasMessageID(message) > 0) && (hasMessageID(message) < 10)) ? message + 3 : message;
-  Serial.println(startOfMessage);
-  Serial.println("Done");
-  
-  // First line
-  strncpy(nextLine, startOfMessage, 20);
-  lcd.setCursor(0, 1);
-  lcd.print(nextLine);
-  
-  // Second line
-  if (messageLength > 20) {
-    strncpy(nextLine, startOfMessage + 20, 20);
-    lcd.setCursor(0, 2);
+    // First line
+    strncpy(nextLine, startOfMessage, 20);
+    lcd.setCursor(0, lineToStartOn);
     lcd.print(nextLine);
-  }
   
-  // Third line
-  if (messageLength > 40) {
-    strncpy(nextLine, startOfMessage + 40, 20);
-    lcd.setCursor(0, 3);
-    lcd.print(nextLine);
+    // Second line
+    if (messageLength > 20) {
+      strncpy(nextLine, startOfMessage + 20, 20);
+      lcd.setCursor(0, lineToStartOn+1);
+      lcd.print(nextLine);
+    }
+  
+    // Third line
+    if (messageLength > 40) {
+      strncpy(nextLine, startOfMessage + 40, 20);
+      lcd.setCursor(0, lineToStartOn+2);
+      lcd.print(nextLine);
+    }
   }
 }
 
 /*
- * Display the text of the message on screen, starting on the second line.
+ * Display the specified debug text on the bottom line of the screen
  */
 void printDebugText(char *message) {
   char nextLine[21];
@@ -867,16 +975,16 @@ byte findMessageWithID(byte msgID) {
  * is one, otherwise 0;
  */
 byte hasMessageID(char* message) {
-  Serial.println(message);
+  //Serial.println(message);
   char id[2] = {message[1], '\0'};
   if (message[0] == '[' && 
       atoi(id) > 0 &&
       atoi(id) <= 9 &&
       message[2] == ']') {
-        Serial.println("Has message ID");
+        //Serial.println("Has message ID");
     return atoi(id);
   }
-  Serial.println("No message ID");
+  //Serial.println("No message ID");
   
   return 0;
 }
@@ -912,14 +1020,26 @@ void checkForSerialData() {
     if (serialRXCursor == 2) {
       // We've received 3 bytes - see if they are [n] where n is an integer
       hasMsgID = hasMessageID(messages[0]);
-      Serial.println(hasMsgID);
     }
     
-    if (messages[0][serialRXCursor] == ':') {
+    if (messages[0][serialRXCursor] == ';') {
+      writeTextToSerial(&(infoStrings[13])); // Message complete - say that on serial out
+      
       // Message complete
       messages[0][serialRXCursor] = '\0';
       serialRXComplete = 1;
       serialRXCursor = 0;
+      
+      // Write diagnostics to serial out
+      if (hasMsgID) {
+        Serial.print("Msg ID=");
+        Serial.print(hasMsgID);
+        Serial.print(", ");
+      }
+      
+      Serial.print("Msg=\"");
+      Serial.print(messages[0]);
+      Serial.println("\"");
       
       byte arrayIndexToWriteNewMessage = 0;
       
@@ -927,8 +1047,6 @@ void checkForSerialData() {
       if (hasMsgID) {
         // If we have a message with the same message ID, replace that one
         arrayIndexToWriteNewMessage = findMessageWithID(hasMsgID);
-        Serial.print("Array index: ");
-        Serial.println(arrayIndexToWriteNewMessage);
       } 
       
       // If we haven't got a specific slot to to write the message, put it in the next free slot
@@ -941,8 +1059,8 @@ void checkForSerialData() {
       
       // Copy from the buffer into the next available slot
       memcpy(messages[arrayIndexToWriteNewMessage], messages[0], 63);
-      
-      showMessages();
+     
+      if (currentMenu == 0) showMessages();
       break;
     } else {
       // Increment the cursor in our buffer. If we've hit our limit
@@ -965,16 +1083,33 @@ void checkForSerialData() {
  * Reset to default settings
  */
 void resetToDefaults() {
-  //Serial.println("Resetting to defaults");
+  
+  writeTextToSerial(&(infoStrings[0]));
+
+  displayTextOnScreen(&(infoStrings[1]));
+
+  waitingFor3RightPresses = 1;
+}
+
+/*
+ * Reset to default settings
+ */
+void doFactoryReset() {
+  
+  writeTextToSerial(&(infoStrings[2]));
+
+  // Causes us to read the original settings from EEPROM
   EEPROM.write(0, 255);
   EEPROM.write(1, 255);
   EEPROM.write(2, 255);
   
-  lcd.clear();
-  lcd.setCursor(0, 0);
-  lcd.print("Reset to factory");
-  lcd.setCursor(0, 1);
-  lcd.print("settings?");
+  displayTextOnScreen(&(infoStrings[2]));
+
+  delay(3000);
+
+  currentMenu = 0;
+  messageCursor = 1;
+  showMessages();
 }
 
 /*
@@ -1047,9 +1182,9 @@ void readProperty(char* propertyName, char* propertyValue) {
     //Serial.print("Byte 2: ");
     //Serial.println(dataLength);
     //Serial.print("Data: ");
-    for (short i = 0; i < dataLength; i++) {
+    //for (short i = 0; i < dataLength; i++) {
       //Serial.print((char)EEPROM.read(dataCursor + i));
-    }
+    //}
     //Serial.println("");
     
     // Read each property into a local array one at a time
@@ -1118,9 +1253,7 @@ void saveSettings(char * httpFormData) {
   
   if (strlen(httpFormData) > 256) {
     // This is too much data - we don't want to store it. Shouldn't ever happen.
-    lcd.clear();
-    lcd.setCursor(0, 0);
-    lcd.print("Config data too long");
+    writeTextToSerial(&(errorStrings[0]));
     turnBacklightOn();
   } else {
     //Serial.println("Saving settings:");
@@ -1141,11 +1274,7 @@ void saveSettings(char * httpFormData) {
     short newDataCursor = 0;
   
     if (newDataLength > 256) {
-      lcd.clear();
-      lcd.setCursor(0, 0);
-      lcd.print("Error. Settings too");
-      lcd.setCursor(0, 1);
-      lcd.print("long for EEPROM");
+      displayTextOnScreen(&(infoStrings[11]));
       delay(10000);
     }
   
@@ -1359,8 +1488,8 @@ void setup() {
   messages[0][0] = messages[1][0] = messages[2][0] = messages[3][0] = messages[4][0] = messages[5][0] = '\0';
   
   // Sample messages
-  sprintf(messages[1], "Here's sample message number one");
-  sprintf(messages[2], "And here's another message to display");
+  strcpy_P(messages[1], (char*)pgm_read_word(&(miscStrings[2])));
+  strcpy_P(messages[2], (char*)pgm_read_word(&(miscStrings[3])));
   numberOfMessages = 2;
   messageReadCursor = 3;
   
@@ -1378,16 +1507,15 @@ void setup() {
   digitalWrite(A3, HIGH);
   
   lcd.begin(20, 4);
-  lcd.setCursor(0, 0);
-  // Print a message to the LCD.
-  lcd.print("Finding IP address");
-  lcd.setCursor(0, 1);
-  lcd.print("using DHCP...");
   
   turnBacklightOn();
   
   // Open serial communications and wait for port to open:
   Serial.begin(9600);
+
+  displayTextOnScreen(&(infoStrings[7]));
+  
+  delay(50);
   
   //Serial.println("SB");
   
@@ -1395,34 +1523,38 @@ void setup() {
    //while (!Serial) {
     //; // wait for serial port to connect. Needed for Leonardo only
   //}
-
-  byte ethRC = Ethernet.begin(mac);
-  // start the Ethernet connection:
-  if (ethRC == 0) {
-    // Failed to connect with DHCP  
-    lcd.print("FAILED");
-    delay(4000);
-  } else {
-    lcd.print("OK");
-    lcd.setCursor(0, 2);
-    printIPAddress();
+  
+  if (usingNetworkFunction) {
+    byte ethRC = Ethernet.begin(mac);
+  
+    // start the Ethernet connection:
+    if (ethRC == 0) {
+      // Failed to connect with DHCP  
+      lcd.print("FAILED");
+      delay(4000);
+    } else {
+      lcd.print("OK");
+      lcd.setCursor(0, 2);
+      printIPAddress();
     
-    // Limit the client connect timeout to a couple of seconds
-    W5100.setRetransmissionTime(0x07D0);
-    W5100.setRetransmissionCount(3);
+      // Limit the client connect timeout to a couple of seconds
+      W5100.setRetransmissionTime(0x07D0);
+      W5100.setRetransmissionCount(3);
     
-    delay(4000);
-  }
+      delay(4000);
+    }
   
 #if defined(DEV)
-  if (ethRC) {
-    printNetworkSettings();
-    delay(4000);
-  }
+    if (ethRC) {
+      printNetworkSettings();
+      delay(4000);
+    }
 #endif
   
-  timeSinceLastLiveConnAttempt = millis() - 500000;
-  
+    timeSinceLastLiveConnAttempt = millis() - 500000;
+  }  
+
+  writeTextToSerial(&(infoStrings[12]));
   showMessages();
 }
 
@@ -1436,8 +1568,9 @@ void loop() {
   char backlightProperty[51];
   backlightProperty[0] = '\0';
   readProperty("blttimer", backlightProperty);
+
   if (strlen(backlightProperty) > 0) {
-   // Convert the char array into an int
+   // Someone has set a new value for the backlight timer, convert the char array into an int
    backlightTimer = atoi(backlightProperty);
    if (backlightTimer > MAXBACKLIGHTTIME) {
      backlightTimer = MAXBACKLIGHTTIME;
@@ -1452,19 +1585,15 @@ void loop() {
       if (backlightOn) {
         turnBacklightOff();
       }
-    
-      if (currentMenu) {
-        // We were in a menu      
-        showMessages();
-      }
     }
-  } else {
-    if ((millis() - timeSinceBacklightOn) > (1000L * (long)DEFAULTBACKLIGHTTIME)) {
-      // Don't turn the backlight off - just go back to the front page
-      if (currentMenu) {
-        // We were in a menu      
-        showMessages();
-      }
+  } 
+    
+  // After 20 seconds we return to the messages view
+  if ((millis() - timeSinceBacklightOn) > (1000L * (long)DEFAULTMENURESETTIME)) {
+    // Go back to the front page
+    if (currentMenu) {
+      // We were in a menu      
+      showMessages();
     }
   }
   
@@ -1490,19 +1619,21 @@ void loop() {
     //delay(500);
   }
   
-  delay(20);
+  delay(10);
   
   checkForSerialData();
   
-  delay(20);
-  
-  checkForHTTPData();
-  
-  delay(5);
-  
-  checkForHTTPConnections();
-  
   delay(10);
+  
+  if (usingNetworkFunction) { 
+    checkForHTTPData();
+    delay(5);
+  }
+  
+  if (usingNetworkFunction) {
+    checkForHTTPConnections();
+    delay(10);
+  }
 }
 
 
