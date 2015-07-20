@@ -17,7 +17,7 @@ my $i = 0;
 my $daysSinceCachedDataRecorded = 0;
 
 print (localtime);
-print "Calculating daily stats for the house\n";
+print "\nCalculating daily stats for the house\n";
 
 while ($i < $numberOfDays) {
 
@@ -79,7 +79,7 @@ while ($i < $numberOfDays) {
       #print "$timestamp, $watts, $nextKwhs\n";
     } 
 
-    print "Total calculated kwhs on " . substr($cache_timestamp,0,10) . " = " . $kwhsTotal . "\n";
+    print "Total calculated kwhs on " . substr($cache_timestamp,0,10) . "(+" . $daysSinceCachedDataRecorded . ") = " . $kwhsTotal . "\n";
 
     $lastTimestamp = 0;
 
