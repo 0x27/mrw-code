@@ -742,8 +742,9 @@
       });
    }
 
-   function loadAverageGasGraph() {
-      $.get('/gas/Ndays?numberofdayshistory=20', function(d) {
+   function loadAverageGasGraph(numberOfDays) {
+      if (isNaN(numberOfDays)) numberOfDays = 590;
+      $.get('/gas/Ndays?numberofdayshistory=' + numberOfDays, function(d) {
          var gasToday = [];
          $(d).find('nextrow').each(function() {
             var $record = $(this);
@@ -763,7 +764,7 @@
          }], {
             xaxis: {
                mode: "time",
-               tickSize: [1, "day"]
+               tickSize: [numberOfDays / 10, "day"]
             },
             series: {
                color: "rgba(135, 182, 217, 0.8)"
@@ -1126,6 +1127,21 @@
          loadElectricityGraph(5);
       });
       $("#radio1").prop("checked", true);
+
+      $("#gasviewoptions").buttonset();
+      $("#gasradio1").click(function() {
+         $("#averagegasgraph").html("Loading...");
+         loadAverageGasGraph();
+      });
+      $("#gasradio2").click(function() {
+         $("#averagegasgraph").html("Loading...");
+         loadAverageGasGraph(62);
+      });
+      $("#gasradio3").click(function() {
+         $("#averagegasgraph").html("Loading...");
+         loadAverageGasGraph(11);
+      });
+      $("#gasradio1").prop("checked", true);
 
       $("#progressbargas").progressbar({
          value: 0

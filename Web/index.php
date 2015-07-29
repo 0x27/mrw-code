@@ -334,6 +334,14 @@
                              <img width="30" src="ajax-loader.gif"/>
                           </div> 
 
+                          <form>
+                            <div id="gasviewoptions">
+                              <input type="radio" id="gasradio1" name="gasradio" checked="checked"><label for="gasradio1">Last 18 Months</label>
+                              <input type="radio" id="gasradio2" name="gasradio"><label for="gasradio2">Last 2 Months</label>
+                              <input type="radio" id="gasradio3" name="gasradio"><label for="gasradio3">Last 10 Days</label>
+                            </div>
+                          </form>
+
                           <div class="vertical-spacer"></div>
 
                           <div>
