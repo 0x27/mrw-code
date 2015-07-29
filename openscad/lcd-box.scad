@@ -1,18 +1,18 @@
 // Set basic attributes
-wallThickness = 4;
-lidThickness = 4;
-boxLength = 200;
-boxWidth = 140;
-boxHeight = 70;
-screwFixingWidth = 10;
+wallThickness = 2;
+lidThickness = 3;
+boxLength = 139;
+boxWidth = 87;
+boxHeight = 51;
+screwFixingWidth = 8;
 lipDepth = 3;
-lcdHoleLength =120;
-lcdHoleWidth = 50;
+lcdHoleLength =92;
+lcdHoleWidth = 39;
 buttonWidth = 12;
 lidInStep = 2;
 
 
-// Create one fo the ends
+// Create one of the ends
 cube([wallThickness,boxWidth+wallThickness,boxHeight]);
 
 
@@ -39,7 +39,7 @@ translate([boxLength - (boxLength/8)- wallThickness,boxWidth-screwFixingWidth,0]
 // Create the other end, with a for the sockets to fit through
 difference() {
 translate([boxLength,0,0]) cube([wallThickness,boxWidth+wallThickness,boxHeight]);
-translate([boxLength - 10,20,0]) cube([20,20,40]);
+translate([boxLength - 10,16,0]) cube([20,16,35]);
 }
 
 
@@ -51,13 +51,13 @@ difference() {
             difference() {
                 difference() {
                     translate([lidInStep,lidInStep,boxHeight]) cube([boxLength+wallThickness-(2*lidInStep),boxWidth+          wallThickness-(2 * lidInStep),lidThickness]);
-                    translate([boxLength/5,20,boxHeight - 10]) cube([buttonWidth,buttonWidth,40]);
+                    translate([boxLength/5,(boxWidth-lcdHoleWidth-12-(buttonWidth/2))/2-wallThickness,boxHeight - 10]) cube([buttonWidth,buttonWidth,40]);
                 };
-                translate([(boxLength/5)*2,20,boxHeight - 10]) cube([buttonWidth,buttonWidth,40]);
+                translate([(boxLength/5)*2,(boxWidth-lcdHoleWidth-12-(buttonWidth/2))/2-wallThickness,boxHeight - 10]) cube([buttonWidth,buttonWidth,40]);
             };
-            translate([(boxLength/5)*3,20,boxHeight - 10]) cube([buttonWidth,buttonWidth,40]);
+            translate([(boxLength/5)*3,(boxWidth-lcdHoleWidth-12-(buttonWidth/2))/2-wallThickness,boxHeight - 10]) cube([buttonWidth,buttonWidth,40]);
         };
-        translate([boxLength-(boxLength/5),20,boxHeight - 10]) cube([buttonWidth,buttonWidth,40]);
+        translate([boxLength-(boxLength/5),(boxWidth-lcdHoleWidth-12-(buttonWidth/2))/2-wallThickness,boxHeight - 10]) cube([buttonWidth,buttonWidth,40]);
     };
-    translate([(boxLength/2)-(lcdHoleLength/2),70,boxHeight - 10]) cube([lcdHoleLength,lcdHoleWidth,40]);
+    translate([(boxLength/2)-(lcdHoleLength/2),boxWidth-lcdHoleWidth-12,boxHeight - 10]) cube([lcdHoleLength,lcdHoleWidth,40]);
 }
