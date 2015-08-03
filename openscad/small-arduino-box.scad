@@ -1,63 +1,101 @@
 // Set basic attributes
-wallThickness = 4;
-lidThickness = 4;
-boxLength = 200;
-boxWidth = 140;
-boxHeight = 70;
-screwFixingWidth = 10;
+wallThickness = 2;
+lidThickness = 3;
+boxLengthInner = 81; 
+boxWidthInner = 78;
+boxHeightInner = 38;
+screwFixingWidth = 8;
 lipDepth = 3;
+lidInStep = 1;
+
+// NOTE - NOT USED IN THIS PROJECT BUT SETTTING THEM TO ZERO
+// HAS THE SAME EFFECT AS REMOVING THE LOGIC FOR THEM. MIGHT
+// WANT TO ADD BUTTONS BACK IN ONE DAY SO LEAVING LOGIC IN PLACE
 lcdHoleLength =0;
 lcdHoleWidth = 0;
 buttonWidth = 0;
-lidInStep = 2;
 
 
-// Create one fo the ends
-cube([wallThickness,boxWidth+wallThickness,boxHeight]);
+// Create one of the ends
+cube([wallThickness,boxWidthInner+(wallThickness*2),boxHeightInner]);
 
 
 
 // Create the lips the 2 ends need for the wooden base to butt up to
-translate([0,0,-lipDepth]) cube([wallThickness,boxWidth+wallThickness,lipDepth]);
-translate([boxLength,0,0]) translate([0,0,-lipDepth]) cube([wallThickness,boxWidth+wallThickness,lipDepth]);
+translate([0,0,-lipDepth])
+    cube([wallThickness,boxWidthInner+(wallThickness*2),lipDepth]);
+    
+translate([0,0,-lipDepth])
+    translate([boxLengthInner+wallThickness,0,0])
+        cube([wallThickness,boxWidthInner+(wallThickness*2),lipDepth]);
 
 
 
 // Create the 2 sides
-cube([boxLength,wallThickness,boxHeight]);
-translate([0,boxWidth,0]) cube([boxLength+wallThickness,wallThickness,boxHeight]);
+translate([wallThickness, 0, 0]) cube([boxLengthInner,wallThickness,boxHeightInner]);
+translate([wallThickness,boxWidthInner+wallThickness,0]) cube([boxLengthInner,wallThickness,boxHeightInner]);
 
 
 
-// Create the screw fixings for the base
-translate([boxLength/8,wallThickness,0]) cube([screwFixingWidth,screwFixingWidth,boxHeight / 3]);
-translate([boxLength - (boxLength/8)- wallThickness, wallThickness,0]) cube([screwFixingWidth,screwFixingWidth,boxHeight / 3]);
-translate([boxLength/8,boxWidth-screwFixingWidth,0]) cube([screwFixingWidth,screwFixingWidth,boxHeight / 3]);
-translate([boxLength - (boxLength/8)- wallThickness,boxWidth-screwFixingWidth,0]) cube([screwFixingWidth,screwFixingWidth,boxHeight / 3]);
+// Create the screw fixings for the base. Initial translate(...) used to move the cursor inside the box
+translate([wallThickness,wallThickness,0])
+    translate([boxLengthInner/6 - (screwFixingWidth/2),0,0])
+        cube([screwFixingWidth,screwFixingWidth,boxHeightInner / 3]);
+        
+translate([wallThickness,wallThickness,0]) 
+    translate([((boxLengthInner/6*5) - (screwFixingWidth/2)),0,0])
+        cube([screwFixingWidth,screwFixingWidth,boxHeightInner / 3]);
+        
+        
+translate([wallThickness,wallThickness,0])
+    translate([boxLengthInner/6-(screwFixingWidth/2),boxWidthInner-screwFixingWidth,0])
+        cube([screwFixingWidth,screwFixingWidth,boxHeightInner / 3]);
+
+translate([wallThickness,wallThickness,0])
+    translate([((boxLengthInner/6*5) - (screwFixingWidth/2)),boxWidthInner-screwFixingWidth,0])
+        cube([screwFixingWidth,screwFixingWidth,boxHeightInner / 3]);
 
 
 // Create the other end, with a for the sockets to fit through
 difference() {
-translate([boxLength,0,0]) cube([wallThickness,boxWidth+wallThickness,boxHeight]);
-translate([boxLength - 10,20,0]) cube([20,20,40]);
+translate([boxLengthInner+wallThickness,0,0])
+    cube([wallThickness,boxWidthInner+(wallThickness*2),boxHeightInner]);
+    
+translate([boxLengthInner+wallThickness - 10,20,1]) // Doesn't matter about x dimensions very much
+    cube([20,18,32]);
 }
 
 
 
-// Create the lid with holes cut out for the buttons and LCD
+// Create the lid with holes cut out for the buttons and LCD.
+// NOTE: IN THIS MODEL THERE ARE NO HOLES BUT HAVING CODED THE LOGIC
+// FOR LAYING THEM OUT IT IS EASIER TO SET THEIR DIMENSIONS TO ZERO
+// AND LEAVE IN THE LOGIC
 difference() {
     difference() {
         difference() {
             difference() {
                 difference() {
-                    translate([lidInStep,lidInStep,boxHeight]) cube([boxLength+wallThickness-(2*lidInStep),boxWidth+          wallThickness-(2 * lidInStep),lidThickness]);
-                    translate([boxLength/5,20,boxHeight - 10]) cube([buttonWidth,buttonWidth,40]);
+                    translate([lidInStep,lidInStep,boxHeightInner])
+                        cube([boxLengthInner+(2*lidInStep),boxWidthInner+(2 * lidInStep),lidThickness]);
+                    
+                    translate([boxLengthInner/5,20,boxHeightInner - 10])
+                        cube([buttonWidth,buttonWidth,40]);
                 };
-                translate([(boxLength/5)*2,20,boxHeight - 10]) cube([buttonWidth,buttonWidth,40]);
+                
+                translate([(boxLengthInner/5)*2,20,boxHeightInner - 10])
+                    cube([buttonWidth,buttonWidth,40]);
             };
-            translate([(boxLength/5)*3,20,boxHeight - 10]) cube([buttonWidth,buttonWidth,40]);
+            
+            translate([(boxLengthInner/5)*3,20,boxHeightInner - 10])
+                cube([buttonWidth,buttonWidth,40]);
         };
-        translate([boxLength-(boxLength/5),20,boxHeight - 10]) cube([buttonWidth,buttonWidth,40]);
+        
+        translate([boxLengthInner-(boxLengthInner/5),20,boxHeightInner - 10])
+            cube([buttonWidth,buttonWidth,40]);
+        
     };
-    translate([(boxLength/2)-(lcdHoleLength/2),70,boxHeight - 10]) cube([lcdHoleLength,lcdHoleWidth,40]);
+    
+    translate([(boxLengthInner/2)-(lcdHoleLength/2),70,boxHeightInner - 10])
+        cube([lcdHoleLength,lcdHoleWidth,40]);
 }
