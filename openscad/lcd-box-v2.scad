@@ -1,3 +1,5 @@
+use <common-objects.scad>
+
 // Set basic attributes
 wallThickness = 2;
 lidThickness = 3;
@@ -13,6 +15,7 @@ buttonWidth = 12;
 // Some compound variables that are complicated enough
 // to warrant their own variable
 distanceOfButtonsFromEdge = (boxWidthInner-lcdHoleWidth-14-(buttonWidth/2))/2-wallThickness;
+screwFixingHeight = boxHeightInner / 4;
 
 
 // Create one of the ends
@@ -21,13 +24,12 @@ cube([wallThickness,boxWidthInner+(wallThickness*2),boxHeightInner]);
 
 
 // Create the lips the 2 ends need for the wooden base to butt up to
-translate([0,0,-lipDepth])
+translate([0,0,-lipDepth]) {
     cube([wallThickness,boxWidthInner+(wallThickness*2),lipDepth]);
     
-translate([0,0,-lipDepth])
     translate([boxLengthInner+wallThickness,0,0])
         cube([wallThickness,boxWidthInner+(wallThickness*2),lipDepth]);
-
+}
 
 
 // Create the 2 sides
@@ -37,22 +39,20 @@ translate([wallThickness,boxWidthInner+wallThickness,0]) cube([boxLengthInner,wa
 
 
 // Create the screw fixings for the base. Initial translate(...) used to move the cursor inside the box
-translate([wallThickness,wallThickness,0])
+translate([wallThickness,wallThickness,0]) {
     translate([boxLengthInner/6 - (screwFixingWidth/2),0,0])
-        cube([screwFixingWidth,screwFixingWidth,boxHeightInner / 3]);
+        screwFixing(screwFixingWidth, screwFixingHeight, screwHoleDiameter);
         
-translate([wallThickness,wallThickness,0]) 
-    translate([((boxLengthInner/6*5) - (screwFixingWidth/2)),0,0])
-        cube([screwFixingWidth,screwFixingWidth,boxHeightInner / 3]);
+    translate([(boxLengthInner/6*5) - (screwFixingWidth/2),0,0])
+        screwFixing(screwFixingWidth, screwFixingHeight, screwHoleDiameter);
         
-        
-translate([wallThickness,wallThickness,0])
-    translate([boxLengthInner/6-(screwFixingWidth/2),boxWidthInner-screwFixingWidth,0])
-        cube([screwFixingWidth,screwFixingWidth,boxHeightInner / 3]);
-
-translate([wallThickness,wallThickness,0])
+    translate([boxLengthInner/6 - (screwFixingWidth/2),boxWidthInner-screwFixingWidth,0])
+        screwFixing(screwFixingWidth, screwFixingHeight, screwHoleDiameter, 2);
+    
     translate([((boxLengthInner/6*5) - (screwFixingWidth/2)),boxWidthInner-screwFixingWidth,0])
-        cube([screwFixingWidth,screwFixingWidth,boxHeightInner / 3]);
+        screwFixing(screwFixingWidth, screwFixingHeight, screwHoleDiameter, 2);
+}
+
 
 
 // Create the other end, with a for the sockets to fit through

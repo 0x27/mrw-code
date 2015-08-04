@@ -1,3 +1,5 @@
+use <common-objects.scad>
+
 // Set basic attributes
 wallThickness = 2;
 lidThickness = 3;
@@ -19,26 +21,8 @@ lcdHoleLength =0;
 lcdHoleWidth = 0;
 buttonWidth = 0;
 
-// Draw a 'ramp' polygon, i.e. a pyramid with a flat sqaure base
-// Orientation can be 0, 1 (rotate about the centre by 90 deg), 2 (180), or 3 (270)
-module drawRamp(baseWidth, baseLength, height, orientation) {
-    translate([orientation > 0 && orientation < 3 ? baseWidth : 0, orientation > 1 && orientation < 4 ? baseLength : 0, 0])
-    rotate([0,0,orientation * 90])
-    polyhedron(
-        points=[[0,0,0],
-                [baseWidth,0,0],
-                [baseWidth,baseLength,0],
-                [0,baseLength,0],
-                [0,0,height],
-                [baseWidth,0,height]],
-        faces=[[0,4,3],[0,1,5,4],[1,2,5],[2,3,4,5],[0,3,2,1]]);
-}
-
-
 // Create one of the ends
 cube([wallThickness,boxWidthInner+(wallThickness*2),boxHeightInner]);
-
-
 
 // Create the lips the 2 ends need for the wooden base to butt up to
 translate([0,0,-lipDepth]) {
@@ -49,7 +33,6 @@ translate([0,0,-lipDepth]) {
 }
 
 
-
 // Create the 2 sides
 translate([wallThickness, 0, 0]) cube([boxLengthInner,wallThickness,boxHeightInner]);
 translate([wallThickness,boxWidthInner+wallThickness,0]) cube([boxLengthInner,wallThickness,boxHeightInner]);
@@ -58,41 +41,17 @@ translate([wallThickness,boxWidthInner+wallThickness,0]) cube([boxLengthInner,wa
 
 // Create the screw fixings for the base. Initial translate(...) used to move the cursor inside the box
 translate([wallThickness,wallThickness,0]) {
-    difference() {
-        translate([boxLengthInner/6 - (screwFixingWidth/2),0,0])
-            cube(size=[screwFixingWidth,screwFixingWidth,screwFixingHeight]);
-        translate([boxLengthInner/6,screwFixingWidth/2,0])
-            cylinder(r=screwHoleDiameter,h=screwFixingHeight/6*5);
-    }
-    translate([boxLengthInner/6 - (screwFixingWidth/2),0,screwFixingHeight])
-        drawRamp(screwFixingWidth,screwFixingWidth,screwFixingHeight/2,0);
+    translate([boxLengthInner/6 - (screwFixingWidth/2),0,0])
+        screwFixing(screwFixingWidth, screwFixingHeight, screwHoleDiameter);
         
-    difference() {
-        translate([((boxLengthInner/6*5) - (screwFixingWidth/2)),0,0])
-            cube([screwFixingWidth,screwFixingWidth,screwFixingHeight]);
-        translate([boxLengthInner/6*5,screwFixingWidth/2,0])
-            cylinder(r=screwHoleDiameter,h=screwFixingHeight/6*5);
-    }
-    translate([((boxLengthInner/6*5) - (screwFixingWidth/2)),0,screwFixingHeight])
-        drawRamp(screwFixingWidth,screwFixingWidth,screwFixingHeight/2,0);
+    translate([(boxLengthInner/6*5) - (screwFixingWidth/2),0,0])
+        screwFixing(screwFixingWidth, screwFixingHeight, screwHoleDiameter);
         
-    difference() {
-        translate([boxLengthInner/6-(screwFixingWidth/2),boxWidthInner-screwFixingWidth,0])
-            cube([screwFixingWidth,screwFixingWidth,screwFixingHeight]);
-        translate([boxLengthInner/6,boxWidthInner-(screwFixingWidth/2),0])
-            cylinder(r=screwHoleDiameter,h=screwFixingHeight/6*5);
-    }
-    translate([boxLengthInner/6-(screwFixingWidth/2),boxWidthInner-screwFixingWidth,screwFixingHeight])
-        drawRamp(screwFixingWidth,screwFixingWidth,screwFixingHeight/2,2);
-
-    difference() {
-        translate([((boxLengthInner/6*5) - (screwFixingWidth/2)),boxWidthInner-screwFixingWidth,0])
-            cube([screwFixingWidth,screwFixingWidth,screwFixingHeight]);
-        translate([boxLengthInner/6*5,boxWidthInner-(screwFixingWidth/2),0])
-            cylinder(r=screwHoleDiameter,h=screwFixingHeight/6*5);
-    }
-    translate([((boxLengthInner/6*5) - (screwFixingWidth/2)),boxWidthInner-screwFixingWidth,screwFixingHeight])
-        drawRamp(screwFixingWidth,screwFixingWidth,screwFixingHeight/2,2);
+    translate([boxLengthInner/6 - (screwFixingWidth/2),boxWidthInner-screwFixingWidth,0])
+        screwFixing(screwFixingWidth, screwFixingHeight, screwHoleDiameter, 2);
+    
+    translate([((boxLengthInner/6*5) - (screwFixingWidth/2)),boxWidthInner-screwFixingWidth,0])
+        screwFixing(screwFixingWidth, screwFixingHeight, screwHoleDiameter, 2);
 }
 
 
