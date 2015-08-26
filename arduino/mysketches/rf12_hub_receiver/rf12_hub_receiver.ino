@@ -39,6 +39,14 @@ static byte testbuf[RF12_MAXDATA], testCounter;
 int cursor = 0;
 byte command[100] = {0};
 
+void setChipTXOn() {
+  rf12_onOff(1);
+}
+
+void setChipTXOff() {
+  rf12_onOff(0);
+}
+
 void setup() {
     Serial.begin(SERIAL_BAUD);
     Serial.println("INFO: rf12_hub_receiver started");
@@ -136,7 +144,7 @@ void loop() {
         rf12_initialize(0, RF12_433MHZ);
       
         // This will take the command we've received, check if it's a BBSB request, and handle it if it is
-        handleBBSBCommand(command);
+        handleBBSBCommand(setChipTXOn, setChipTXOff, true, command);
       
         // Re-initialise the RFM12B chip back to the values we need
         rf12_initialize(0x41, RF12_433MHZ, groupId);
