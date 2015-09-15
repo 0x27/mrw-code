@@ -15,8 +15,10 @@
  *           in the OOK timings to take into account the fact that the SPI interface incurs a delay
  * Param 4 = a colon-terminated string (using a proprietary format) denoting the command to send, e.g. "BBSB 1 A 0:"
  *           to turn socket 1 in home group A off.
+ * Returns 0 if the command could be parsed and handled (with no guarantee it was received by anyone), 1 if
+ *         it contained any syntax or formatting errors.
  */
-void handleBBSBCommand(void (*methodToSetChipHigh)(), void (*methodToSetChipLow)(), bool includeSPIInterfaceDelays, byte* command);
+byte handleBBSBCommand(void (*methodToSetChipHigh)(), void (*methodToSetChipLow)(), bool includeSPIInterfaceDelays, byte* command);
 
 #endif
 

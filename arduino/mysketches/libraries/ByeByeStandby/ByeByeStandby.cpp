@@ -80,7 +80,7 @@ static void OOKSend(void (*methodToSetChipHigh)(), void (*methodToSetChipLow)(),
 
 		// Finish the transmission with a short-long pair
 		ookPulse(methodToSetChipHigh, methodToSetChipLow, includeSPIInterfaceDelays, OFF, ON);
-		delay(4);
+		delay(50);
 	}
 }
 
@@ -89,8 +89,10 @@ static void OOKSend(void (*methodToSetChipHigh)(), void (*methodToSetChipLow)(),
  *
  * Can be used with different RF chips. To do this, the methods for setting the OOK transmitter HIGH (usually TX ON)
  * and LOW (usually TX off) for a particular chip are passed in.
+ * 
+ * Returns 0 if the command at least parsed correctly. 1 if there were any syntax or other parsing errors in the command.
  */
-void handleBBSBCommand(void (*methodToSetChipHigh)(), void (*methodToSetChipLow)(), bool includeSPIInterfaceDelays, byte* command) {
+byte handleBBSBCommand(void (*methodToSetChipHigh)(), void (*methodToSetChipLow)(), bool includeSPIInterfaceDelays, byte* command) {
   // First 4 bytes indicate the command type (e.g. BBSB, KAKU, HOME, DORM)
   if (strncmp((char*)command, BBSB, 4) == 0) {
     // We're doing BBSB stuff
@@ -123,6 +125,7 @@ void handleBBSBCommand(void (*methodToSetChipHigh)(), void (*methodToSetChipLow)
         int theCommand = (homeGroupID & 7) | ((socketID & 7) << 4) | (onOff << 11) | (1024 + 512);
         //OOKSend(0b 00000110 00110000);
         OOKSend(methodToSetChipHigh, methodToSetChipLow, includeSPIInterfaceDelays, theCommand);
+        return 0;
       } else {
         Serial.println("INFO: The on/off value was out of range. Valid values are 0 or 1 (as chars, e.g. 48 or 49)");
       }
@@ -132,5 +135,6 @@ void handleBBSBCommand(void (*methodToSetChipHigh)(), void (*methodToSetChipLow)
   } else {
     Serial.println("INFO: Unrecognised serial command received (and ignored)");
   }
+  return 1;
 }
 
