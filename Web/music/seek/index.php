@@ -1,3 +1,3 @@
 <?php
-shell_exec('mpc seek '.$_GET['timepercent'].'%');
+shell_exec('mpc seek '.escapeshellarg($_GET['timepercent']).'%');
 ?>
