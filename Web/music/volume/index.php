@@ -1,3 +1,3 @@
 <?php
-shell_exec('mpc volume '.$_GET['volumeamount']);
+shell_exec('mpc volume '.escapeshellarg($_GET['volumeamount']));
 ?>
