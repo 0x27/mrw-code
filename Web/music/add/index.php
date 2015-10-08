@@ -1,7 +1,7 @@
 <?php header('Content-type: text/plain'); ?>
 <?php
-$artistname = $_GET['artistname'];
-$albumname = $_GET['albumname'];
+$artistname = escapeshellarg($_GET['artistname']);
+$albumname = escapeshellarg($_GET['albumname']);
 
 if (strlen($artistname) > 0)
 {
