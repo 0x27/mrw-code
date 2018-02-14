@@ -7,7 +7,7 @@ $artistname = $_GET['name'];
 if (strlen($artistname) == 0)
 {
    $music=shell_exec('mpc ls');
-   
+
    $parts=explode("\n", $music);
    $size=count($parts);
    $i=0;
@@ -28,8 +28,10 @@ if (strlen($artistname) == 0)
 }
 else
 {
-  $albums=shell_exec('mpc ls "'.$artistname.'"');
-  
+
+  #$albums=shell_exec('mpc ls "'.$artistname.'"'); # Old vulnerable code
+  $albums=shell_exec('mpc ls "'.escapeshellarg($artistname)'"');
+
   $parts=explode("\n", $albums);
    $size=count($parts);
    $i=0;
@@ -51,4 +53,3 @@ else
 }
 ?>
 </result>
-
